@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: orbitalLogistic
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://db:5432/orbitalLogistic
+    username: postgres
+    password: postgres_pass
+
+  flyway:
+    placeholders:
+      adminUsername: admin
+      adminEmail: admin@ya.ru
+      adminPassword: 1234
+
+jwt:
+  secret: "your-super-secret-key-at-least-256-bits-long-for-production-change-this"
+  expiration: 86400000
