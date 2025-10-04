@@ -28,7 +28,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
 
     public UserResponseDTO registerUser(UserRegistrationRequestDTO request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -36,7 +35,6 @@ public class UserService {
         }
 
         User user = userMapper.toEntity(request);
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
 
         // Set default USER role
         UserRole userRole = roleRepository.findByName("USER")

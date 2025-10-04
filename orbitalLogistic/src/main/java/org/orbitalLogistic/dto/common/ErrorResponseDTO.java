@@ -1,14 +1,19 @@
 package org.orbitalLogistic.dto.common;
 
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponseDTO(
-        @NotNull String message,
-        @NotNull String code,
-        @NotNull LocalDateTime timestamp,
-        String path,
-        Map<String, String> details
-) {}
+    LocalDateTime timestamp,
+    int status,
+    String error,
+    String message,
+    Map<String, String> details
+) {
+    public ErrorResponseDTO(LocalDateTime timestamp, int status, String error, String message) {
+        this(timestamp, status, error, message, null);
+    }
+}

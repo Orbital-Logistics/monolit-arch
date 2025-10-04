@@ -33,42 +33,42 @@ CREATE TABLE "user" (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE SpacecraftType (
+CREATE TABLE spacecraft_type (
     id BIGSERIAL PRIMARY KEY,
     type_name VARCHAR(50) NOT NULL UNIQUE,
     classification spacecraft_classification_enum NOT NULL,
     max_crew_capacity INTEGER
 );
 
-CREATE TABLE Spacecraft (
+CREATE TABLE spacecraft (
     id BIGSERIAL PRIMARY KEY,
     registry_code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
-    spacecraft_type_id BIGINT NOT NULL REFERENCES SpacecraftType(id) ON DELETE RESTRICT,
+    spacecraft_type_id BIGINT NOT NULL REFERENCES spacecraft_type(id) ON DELETE RESTRICT,
     mass_capacity DECIMAL(15,2) NOT NULL,
     volume_capacity DECIMAL(15,2) NOT NULL,
     status spacecraft_status_enum NOT NULL DEFAULT 'DOCKED',
     current_location VARCHAR(100)
 );
 
-CREATE TABLE CargoCategory (
+CREATE TABLE cargo_category (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    parent_category_id BIGINT REFERENCES CargoCategory(id) ON DELETE SET NULL,
+    parent_category_id BIGINT REFERENCES cargo_category(id) ON DELETE SET NULL,
     description TEXT
 );
 
-CREATE TABLE Cargo (
+CREATE TABLE cargo (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
-    cargo_category_id BIGINT NOT NULL REFERENCES CargoCategory(id) ON DELETE RESTRICT,
+    cargo_category_id BIGINT NOT NULL REFERENCES cargo_category(id) ON DELETE RESTRICT,
     mass_per_unit DECIMAL(10,2) NOT NULL,
     volume_per_unit DECIMAL(10,2) NOT NULL,
     cargo_type cargo_type_enum NOT NULL,
     hazard_level hazard_level_enum NOT NULL DEFAULT 'NONE'
 );
 
-CREATE TABLE StorageUnit (
+CREATE TABLE storage_unit (
     id BIGSERIAL PRIMARY KEY,
     unit_code VARCHAR(20) NOT NULL UNIQUE,
     location VARCHAR(100) NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE StorageUnit (
     current_volume DECIMAL(15,2) NOT NULL DEFAULT 0
 );
 
-CREATE TABLE Mission (
+CREATE TABLE mission (
     id BIGSERIAL PRIMARY KEY,
     mission_code VARCHAR(20) NOT NULL UNIQUE,
     mission_name VARCHAR(200) NOT NULL,
@@ -87,35 +87,35 @@ CREATE TABLE Mission (
     status mission_status_enum NOT NULL DEFAULT 'PLANNING',
     priority mission_priority_enum NOT NULL DEFAULT 'MEDIUM',
     commanding_officer_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
-    spacecraft_id BIGINT NOT NULL REFERENCES Spacecraft(id) ON DELETE RESTRICT,
+    spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE RESTRICT,
     scheduled_departure TIMESTAMP WITHOUT TIME ZONE,
     scheduled_arrival TIMESTAMP WITHOUT TIME ZONE
 );
 
 -- Связующие таблицы
 
-CREATE TABLE MissionAssignment (
+CREATE TABLE mission_assignment (
     id BIGSERIAL PRIMARY KEY,
-    mission_id BIGINT NOT NULL REFERENCES Mission(id) ON DELETE CASCADE,
+    mission_id BIGINT NOT NULL REFERENCES mission(id) ON DELETE CASCADE,
     user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     assigned_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     assignment_role assignment_role_enum NOT NULL,
     responsibility_zone VARCHAR(100)
 );
 
-CREATE TABLE CargoStorage (
+CREATE TABLE cargo_storage (
     id BIGSERIAL PRIMARY KEY,
-    storage_unit_id BIGINT NOT NULL REFERENCES StorageUnit(id) ON DELETE CASCADE,
-    cargo_id BIGINT NOT NULL REFERENCES Cargo(id) ON DELETE CASCADE,
+    storage_unit_id BIGINT NOT NULL REFERENCES storage_unit(id) ON DELETE CASCADE,
+    cargo_id BIGINT NOT NULL REFERENCES cargo(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
     stored_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     last_inventory_check TIMESTAMP WITHOUT TIME ZONE,
     last_checked_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL
 );
 
-CREATE TABLE MaintenanceLog (
+CREATE TABLE maintenance_log (
     id BIGSERIAL PRIMARY KEY,
-    spacecraft_id BIGINT NOT NULL REFERENCES Spacecraft(id) ON DELETE CASCADE,
+    spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE CASCADE,
     maintenance_type maintenance_type_enum NOT NULL,
     performed_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
     supervised_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL,
@@ -126,11 +126,11 @@ CREATE TABLE MaintenanceLog (
     cost DECIMAL(10,2)
 );
 
-CREATE TABLE CargoManifest (
+CREATE TABLE cargo_manifest (
     id BIGSERIAL PRIMARY KEY,
-    spacecraft_id BIGINT NOT NULL REFERENCES Spacecraft(id) ON DELETE CASCADE,
-    cargo_id BIGINT NOT NULL REFERENCES Cargo(id) ON DELETE RESTRICT,
-    storage_unit_id BIGINT NOT NULL REFERENCES StorageUnit(id) ON DELETE RESTRICT,
+    spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE CASCADE,
+    cargo_id BIGINT NOT NULL REFERENCES cargo(id) ON DELETE RESTRICT,
+    storage_unit_id BIGINT NOT NULL REFERENCES storage_unit(id) ON DELETE RESTRICT,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     loaded_at TIMESTAMP WITHOUT TIME ZONE,
     unloaded_at TIMESTAMP WITHOUT TIME ZONE,
@@ -140,15 +140,15 @@ CREATE TABLE CargoManifest (
     priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL' CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'CRITICAL'))
 );
 
-CREATE TABLE InventoryTransaction (
+CREATE TABLE inventory_transaction (
     id BIGSERIAL PRIMARY KEY,
     transaction_type transaction_type_enum NOT NULL,
     cargo_id BIGINT NOT NULL REFERENCES Cargo(id) ON DELETE RESTRICT,
     quantity INTEGER NOT NULL,
-    from_storage_unit_id BIGINT REFERENCES StorageUnit(id) ON DELETE SET NULL,
-    to_storage_unit_id BIGINT REFERENCES StorageUnit(id) ON DELETE SET NULL,
-    from_spacecraft_id BIGINT REFERENCES Spacecraft(id) ON DELETE SET NULL,
-    to_spacecraft_id BIGINT REFERENCES Spacecraft(id) ON DELETE SET NULL,
+    from_storage_unit_id BIGINT REFERENCES storage_unit(id) ON DELETE SET NULL,
+    to_storage_unit_id BIGINT REFERENCES storage_unit(id) ON DELETE SET NULL,
+    from_spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE SET NULL,
+    to_spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE SET NULL,
     performed_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
     transaction_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     reason_code VARCHAR(50),
@@ -164,8 +164,8 @@ CREATE TABLE InventoryTransaction (
 );
 
 -- Простая M2M: Spacecraft <-> Mission (резервные корабли)
-CREATE TABLE SpacecraftMission (
-    spacecraft_id BIGINT REFERENCES Spacecraft(id) ON DELETE CASCADE,
-    mission_id BIGINT REFERENCES Mission(id) ON DELETE CASCADE,
+CREATE TABLE spacecraft_mission (
+    spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE CASCADE,
+    mission_id BIGINT REFERENCES mission(id) ON DELETE CASCADE,
     PRIMARY KEY (spacecraft_id, mission_id)
 );
