@@ -11,6 +11,8 @@ CREATE TYPE assignment_role_enum AS ENUM ('COMMANDER', 'PILOT', 'ENGINEER', 'SCI
 CREATE TYPE maintenance_type_enum AS ENUM ('ROUTINE', 'REPAIR', 'UPGRADE', 'INSPECTION');
 CREATE TYPE maintenance_status_enum AS ENUM ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED');
 CREATE TYPE transaction_type_enum AS ENUM ('LOAD', 'UNLOAD', 'TRANSFER', 'ADJUSTMENT', 'CONSUMPTION');
+CREATE TYPE manifest_status_enum AS ENUM ('PENDING', 'LOADED', 'IN_TRANSIT', 'UNLOADED');
+CREATE TYPE manifest_priority_enum AS ENUM ('LOW', 'NORMAL', 'HIGH', 'CRITICAL');
 
 -- 2. Таблицы
 
@@ -136,8 +138,8 @@ CREATE TABLE cargo_manifest (
     unloaded_at TIMESTAMP WITHOUT TIME ZONE,
     loaded_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
     unloaded_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL,
-    manifest_status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (manifest_status IN ('PENDING', 'LOADED', 'IN_TRANSIT', 'UNLOADED')),
-    priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL' CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'CRITICAL'))
+    manifest_status manifest_status_enum NOT NULL DEFAULT 'PENDING',
+    priority manifest_priority_enum NOT NULL DEFAULT 'NORMAL'
 );
 
 CREATE TABLE inventory_transaction (
