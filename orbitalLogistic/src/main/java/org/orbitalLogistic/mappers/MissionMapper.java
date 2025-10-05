@@ -19,14 +19,9 @@ public interface MissionMapper {
             String spacecraftName
     );
 
-    // Request DTO -> Entity (для создания новой миссии)
+    // Request DTO -> Entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", expression = "java(org.orbitalLogistic.entities.enums.MissionStatus.PLANNING)")
-    @Mapping(target = "actualArrival", ignore = true)
-    @Mapping(target = "completedByUserId", ignore = true)
-    @Mapping(target = "completionNotes", ignore = true)
-    @Mapping(target = "isSuccessful", ignore = true)
-    @Mapping(target = "failureReason", ignore = true)
-    @Mapping(target = "cargoItems", ignore = true)
+    @Mapping(target = "priority", expression = "java(org.orbitalLogistic.entities.enums.MissionPriority.MEDIUM)")
     Mission toEntity(MissionRequestDTO request);
 }

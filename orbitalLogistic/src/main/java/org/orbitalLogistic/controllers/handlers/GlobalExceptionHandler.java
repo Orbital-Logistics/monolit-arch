@@ -1,13 +1,8 @@
 package org.orbitalLogistic.controllers.handlers;
 
 import org.orbitalLogistic.dto.common.ErrorResponseDTO;
-import org.orbitalLogistic.exceptions.CargoAlreadyExistsException;
-import org.orbitalLogistic.exceptions.CargoNotFoundException;
+import org.orbitalLogistic.exceptions.*;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
-import org.orbitalLogistic.exceptions.SpacecraftAlreadyExistsException;
-import org.orbitalLogistic.exceptions.SpacecraftNotFoundException;
-import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
-import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -26,6 +21,14 @@ public class GlobalExceptionHandler {
         SpacecraftNotFoundException.class,
         CargoNotFoundException.class,
         StorageUnitNotFoundException.class,
+        MissionNotFoundException.class,
+        CargoManifestNotFoundException.class,
+        CargoStorageNotFoundException.class,
+        MissionAssignmentNotFoundException.class,
+        CargoCategoryNotFoundException.class,
+        MaintenanceLogNotFoundException.class,
+        SpacecraftTypeNotFoundException.class,
+        InventoryTransactionNotFoundException.class,
         DataNotFoundException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleNotFoundException(RuntimeException ex) {
@@ -41,7 +44,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         SpacecraftAlreadyExistsException.class,
         CargoAlreadyExistsException.class,
-        StorageUnitAlreadyExistsException.class
+        StorageUnitAlreadyExistsException.class,
+        MissionAlreadyExistsException.class
     })
     public ResponseEntity<ErrorResponseDTO> handleConflictException(RuntimeException ex) {
         ErrorResponseDTO error = new ErrorResponseDTO(
@@ -70,6 +74,28 @@ public class GlobalExceptionHandler {
             errors
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+            LocalDateTime.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            "Bad Request",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalStateException(IllegalStateException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            "Illegal State",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(Exception.class)

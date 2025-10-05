@@ -26,9 +26,7 @@ public interface CargoStorageMapper {
     // Request DTO -> Entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "storedAt", expression = "java(java.time.LocalDateTime.now())")
-    // Игнорируем поля для обновления количества
-    @Mapping(target = "updatedByUserId", ignore = true)
-    @Mapping(target = "reason", ignore = true)
-    @Mapping(target = "notes", ignore = true)
+    @Mapping(target = "lastInventoryCheck", ignore = true)
+    @Mapping(target = "lastCheckedByUserId", ignore = true)
     CargoStorage toEntity(CargoStorageRequestDTO request);
 }

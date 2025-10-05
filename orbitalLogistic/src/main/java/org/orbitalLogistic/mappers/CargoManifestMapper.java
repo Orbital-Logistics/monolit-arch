@@ -27,12 +27,9 @@ public interface CargoManifestMapper {
 
     // Request DTO -> Entity
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "loadedAt", ignore = true)
+    @Mapping(target = "unloadedAt", ignore = true)
     @Mapping(target = "manifestStatus", expression = "java(org.orbitalLogistic.entities.enums.ManifestStatus.PENDING)")
-    // Игнорируем поля для массовых операций
-    @Mapping(target = "cargoItems", ignore = true)
-    @Mapping(target = "targetStorageUnitId", ignore = true)
-    @Mapping(target = "unloadedByUserId", ignore = true)
-    @Mapping(target = "operation", ignore = true)
-    @Mapping(target = "notes", ignore = true)
+    @Mapping(target = "priority", expression = "java(org.orbitalLogistic.entities.enums.ManifestPriority.NORMAL)")
     CargoManifest toEntity(CargoManifestRequestDTO request);
 }
