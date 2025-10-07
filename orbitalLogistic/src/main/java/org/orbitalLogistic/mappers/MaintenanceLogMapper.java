@@ -24,10 +24,5 @@ public interface MaintenanceLogMapper {
     // Request DTO -> Entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", expression = "java(org.orbitalLogistic.entities.enums.MaintenanceStatus.SCHEDULED)")
-    // Игнорируем поля для завершения ТО при создании
-    @Mapping(target = "newSpacecraftStatus", ignore = true)
-    @Mapping(target = "finalCost", ignore = true)
-    @Mapping(target = "completionNotes", ignore = true)
-    @Mapping(target = "completedByUserId", ignore = true)
     MaintenanceLog toEntity(MaintenanceLogRequestDTO request);
 }

@@ -22,6 +22,5 @@ public interface MissionAssignmentMapper {
     // Request DTO -> Entity (для индивидуального назначения)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "assignedAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "crewAssignments", ignore = true)
     MissionAssignment toEntity(MissionAssignmentRequestDTO request);
 }
