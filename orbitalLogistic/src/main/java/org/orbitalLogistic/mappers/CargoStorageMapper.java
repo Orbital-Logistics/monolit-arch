@@ -10,7 +10,12 @@ import org.orbitalLogistic.entities.CargoStorage;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CargoStorageMapper {
 
-    // Entity -> Response DTO
+    @Mapping(target = "storageUnitCode", ignore = true)
+    @Mapping(target = "storageLocation", ignore = true)
+    @Mapping(target = "cargoName", ignore = true)
+    @Mapping(target = "lastCheckedByUserName", ignore = true)
+    CargoStorageResponseDTO toResponseDTO(CargoStorage cargoStorage);
+
     @Mapping(target = "storageUnitCode", source = "storageUnitCode")
     @Mapping(target = "storageLocation", source = "storageLocation")
     @Mapping(target = "cargoName", source = "cargoName")

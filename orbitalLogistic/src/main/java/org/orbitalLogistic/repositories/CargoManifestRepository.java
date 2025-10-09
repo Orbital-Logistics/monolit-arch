@@ -20,6 +20,8 @@ public interface CargoManifestRepository extends CrudRepository<CargoManifest, L
     List<CargoManifest> findByManifestStatus(ManifestStatus manifestStatus);
     List<CargoManifest> findByPriority(ManifestPriority priority);
 
+    boolean existsByCargoId(Long cargoId);
+
     List<CargoManifest> findByLoadedByUserId(Long loadedByUserId);
     List<CargoManifest> findByUnloadedByUserId(Long unloadedByUserId);
 

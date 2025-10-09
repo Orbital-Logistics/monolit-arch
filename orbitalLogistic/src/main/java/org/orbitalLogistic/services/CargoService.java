@@ -10,9 +10,11 @@ import org.orbitalLogistic.entities.CargoCategory;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.exceptions.CargoAlreadyExistsException;
 import org.orbitalLogistic.exceptions.CargoNotFoundException;
+import org.orbitalLogistic.exceptions.InvalidOperationException;
 import org.orbitalLogistic.mappers.CargoMapper;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.CargoCategoryRepository;
+import org.orbitalLogistic.repositories.CargoManifestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class CargoService {
 
     private final CargoRepository cargoRepository;
     private final CargoCategoryRepository cargoCategoryRepository;
+    private final CargoManifestRepository cargoManifestRepository;
     private final CargoMapper cargoMapper;
 
     @Transactional(readOnly = true)
@@ -100,6 +103,12 @@ public class CargoService {
         if (!cargoRepository.existsById(id)) {
             throw new CargoNotFoundException("Cargo not found with id: " + id);
         }
+
+        boolean hasManifests = cargoManifestRepository.existsByCargoId(id);
+        if (hasManifests) {
+            throw new InvalidOperationException("Cannot delete cargo: it is used in cargo manifests");
+        }
+
         cargoRepository.deleteById(id);
     }
 
