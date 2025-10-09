@@ -18,6 +18,8 @@ public interface CargoStorageRepository extends CrudRepository<CargoStorage, Lon
 
     List<CargoStorage> findByLastCheckedByUserId(Long userId);
 
+    long countByStorageUnitId(Long storageUnitId);
+
     @Query("""
         SELECT cs.* FROM cargo_storage cs
         WHERE cs.storage_unit_id = :storageUnitId
