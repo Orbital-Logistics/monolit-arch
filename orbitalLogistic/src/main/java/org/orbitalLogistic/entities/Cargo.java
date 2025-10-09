@@ -6,20 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import org.orbitalLogistic.entities.enums.CargoType;
 import org.orbitalLogistic.entities.enums.HazardLevel;
-
-import java.math.BigDecimal;
-
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
@@ -61,6 +51,7 @@ public class Cargo {
     @Column("hazard_level")
     private HazardLevel hazardLevel;
 
+    @Builder.Default
     @Column("is_active")
     private Boolean isActive = true;
 }
