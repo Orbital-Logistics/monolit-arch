@@ -155,7 +155,7 @@ public class CargoManifestService {
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
     }
 
-    private CargoManifestResponseDTO toResponseDTO(CargoManifest manifest) {
+    public CargoManifestResponseDTO toResponseDTO(CargoManifest manifest) {
         Spacecraft spacecraft = spacecraftRepository.findById(manifest.getSpacecraftId())
                 .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
 
