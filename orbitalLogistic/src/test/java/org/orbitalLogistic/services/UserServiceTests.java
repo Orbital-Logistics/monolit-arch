@@ -76,7 +76,7 @@ class UserServiceTests {
 
     @Test
     void registerUser_WithValidRequest_ShouldCreateUser() {
-        // given
+        
         User newUser = User.builder()
                 .first_name("Jane")
                 .last_name("Doe")
@@ -93,13 +93,13 @@ class UserServiceTests {
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(newUser);
         when(roleRepository.findByName("USER")).thenReturn(Optional.of(testRole));
         when(userRepository.save(newUser)).thenReturn(testUser);
-        // Используем any() для роли, так как в реальном коде может использоваться "UNKNOWN"
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(expectedResponse);
 
-        // when
+        
         UserResponseDTO result = userService.registerUser(testRegistrationRequest);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("jane.doe@example.com", result.email());
         assertEquals("Jane", result.username());
@@ -111,10 +111,10 @@ class UserServiceTests {
 
     @Test
     void registerUser_WithExistingEmail_ShouldThrowException() {
-        // given
+        
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(true);
 
-        // when & then
+        
         UserAlreadyExistsException exception = assertThrows(
                 UserAlreadyExistsException.class,
                 () -> userService.registerUser(testRegistrationRequest)
@@ -127,12 +127,12 @@ class UserServiceTests {
 
     @Test
     void registerUser_WithMissingRole_ShouldThrowException() {
-        // given
+        
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(false);
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(testUser);
         when(roleRepository.findByName("USER")).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> userService.registerUser(testRegistrationRequest)
@@ -145,19 +145,19 @@ class UserServiceTests {
 
     @Test
     void getUsers_WithValidFilters_ShouldReturnPageResponse() {
-        // given
+        
         List<User> users = List.of(testUser);
         when(userRepository.findUsersWithFilters("john.doe@example.com", "John", 10, 0))
                 .thenReturn(users);
         when(userRepository.countUsersWithFilters("john.doe@example.com", "John"))
                 .thenReturn(1L);
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<UserResponseDTO> result = userService.getUsers("john.doe@example.com", "John", 0, 10);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -172,19 +172,19 @@ class UserServiceTests {
 
     @Test
     void getUsers_WithNullFilters_ShouldReturnAllUsers() {
-        // given
+        
         List<User> users = List.of(testUser);
         when(userRepository.findUsersWithFilters(null, null, 20, 0))
                 .thenReturn(users);
         when(userRepository.countUsersWithFilters(null, null))
                 .thenReturn(1L);
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<UserResponseDTO> result = userService.getUsers(null, null, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         verify(userRepository, times(1)).findUsersWithFilters(null, null, 20, 0);
@@ -192,16 +192,16 @@ class UserServiceTests {
 
     @Test
     void findUserById_WithValidId_ShouldReturnUser() {
-        // given
+        
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         UserResponseDTO result = userService.findUserById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("john.doe@example.com", result.email());
@@ -210,10 +210,10 @@ class UserServiceTests {
 
     @Test
     void findUserById_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userService.findUserById(999L)
@@ -225,16 +225,16 @@ class UserServiceTests {
 
     @Test
     void findUserByEmail_WithValidEmail_ShouldReturnUser() {
-        // given
+        
         when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.of(testUser));
         when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         UserResponseDTO result = userService.findUserByEmail("john.doe@example.com");
 
-        // then
+        
         assertNotNull(result);
         assertEquals("john.doe@example.com", result.email());
         verify(userRepository, times(1)).findByEmail("john.doe@example.com");
@@ -242,10 +242,10 @@ class UserServiceTests {
 
     @Test
     void findUserByEmail_WithInvalidEmail_ShouldThrowException() {
-        // given
+        
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userService.findUserByEmail("nonexistent@example.com")
@@ -257,7 +257,7 @@ class UserServiceTests {
 
     @Test
     void updateUser_WithValidId_ShouldUpdateUser() {
-        // given
+        
         User updatedUser = User.builder()
                 .id(1L)
                 .first_name("Jane Updated")
@@ -274,13 +274,13 @@ class UserServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
         when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(updatedUser), anyString())).thenReturn(updatedResponse);
 
-        // when
+        
         UserResponseDTO result = userService.updateUser(1L, testUpdateRequest);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("Jane Updated", result.username());
         verify(userRepository, times(1)).findById(1L);
@@ -289,10 +289,10 @@ class UserServiceTests {
 
     @Test
     void updateUser_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userService.updateUser(999L, testUpdateRequest)
@@ -305,42 +305,42 @@ class UserServiceTests {
 
     @Test
     void updateUser_WithNullUsername_ShouldNotUpdateUsername() {
-        // given
+        
         UpdateUserRequestDTO requestWithNullUsername = new UpdateUserRequestDTO(null);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(testUser)).thenReturn(testUser);
         when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         UserResponseDTO result = userService.updateUser(1L, requestWithNullUsername);
 
-        // then
+        
         assertNotNull(result);
-        assertEquals("John", result.username()); // Should remain unchanged
+        assertEquals("John", result.username()); 
         verify(userRepository, times(1)).save(testUser);
     }
 
     @Test
     void deleteUser_WithValidId_ShouldDeleteUser() {
-        // given
+        
         when(userRepository.existsById(1L)).thenReturn(true);
 
-        // when
+        
         userService.deleteUser(1L);
 
-        // then
+        
         verify(userRepository, times(1)).existsById(1L);
         verify(userRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void deleteUser_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(userRepository.existsById(999L)).thenReturn(false);
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userService.deleteUser(999L)
@@ -353,16 +353,16 @@ class UserServiceTests {
 
     @Test
     void toResponseDTO_WithValidUser_ShouldReturnResponseDTO() {
-        // given
+        
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         UserResponseDTO result = userService.findUserById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("USER", result.role());
@@ -371,18 +371,18 @@ class UserServiceTests {
 
     @Test
     void toResponseDTO_WithUnknownRole_ShouldReturnUnknownRole() {
-        // given
+        
         UserResponseDTO unknownRoleResponse = new UserResponseDTO(1L, "john.doe@example.com", "John", "UNKNOWN");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(roleRepository.findById(1L)).thenReturn(Optional.empty());
-        // Стабим конкретно для "UNKNOWN"
+        
         when(userMapper.toResponseDTO(eq(testUser), eq("UNKNOWN"))).thenReturn(unknownRoleResponse);
 
-        // when
+        
         UserResponseDTO result = userService.findUserById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("UNKNOWN", result.role());
         verify(roleRepository, times(1)).findById(1L);
@@ -390,14 +390,14 @@ class UserServiceTests {
 
     @Test
     void getUsers_WithEmptyResult_ShouldReturnEmptyPage() {
-        // given
+        
         when(userRepository.findUsersWithFilters(null, null, 20, 0)).thenReturn(List.of());
         when(userRepository.countUsersWithFilters(null, null)).thenReturn(0L);
 
-        // when
+        
         PageResponseDTO<UserResponseDTO> result = userService.getUsers(null, null, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -408,17 +408,17 @@ class UserServiceTests {
 
     @Test
     void getUsers_WithMultiplePages_ShouldCalculatePaginationCorrectly() {
-        // given
+        
         List<User> users = List.of(testUser);
         when(userRepository.findUsersWithFilters(null, null, 10, 10)).thenReturn(users);
         when(userRepository.countUsersWithFilters(null, null)).thenReturn(25L);
-        // Используем any() для роли
+        
         when(userMapper.toResponseDTO(eq(testUser), anyString())).thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<UserResponseDTO> result = userService.getUsers(null, null, 1, 10);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.currentPage());
         assertEquals(10, result.pageSize());

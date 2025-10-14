@@ -89,7 +89,7 @@ class MissionServiceTests {
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(30)
         );
 
-        // Исправлено: все необходимые параметры для MissionRequestDTO
+        
         testRequestDTO = new MissionRequestDTO(
                 "MISSION-001", "Exploration Mission", MissionType.SCIENCE_EXPEDITION,
                 MissionPriority.HIGH, 1L, 1L,
@@ -100,7 +100,7 @@ class MissionServiceTests {
 
     @Test
     void getMissions_WithValidFilters_ShouldReturnPageResponse() {
-        // given
+        
         List<Mission> missions = List.of(testMission);
         when(missionRepository.findWithFilters("MISSION-001", null, "PLANNING", "SCIENCE_EXPEDITION", null, null, null, 20, 0))
                 .thenReturn(missions);
@@ -111,10 +111,10 @@ class MissionServiceTests {
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<MissionResponseDTO> result = missionService.getMissions("MISSION-001", "PLANNING", "SCIENCE_EXPEDITION", 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -129,7 +129,7 @@ class MissionServiceTests {
 
     @Test
     void getMissions_WithNullFilters_ShouldReturnAllMissions() {
-        // given
+        
         List<Mission> missions = List.of(testMission);
         when(missionRepository.findWithFilters(null, null, null, null, null, null, null, 20, 0))
                 .thenReturn(missions);
@@ -140,10 +140,10 @@ class MissionServiceTests {
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<MissionResponseDTO> result = missionService.getMissions(null, null, null, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         verify(missionRepository, times(1)).findWithFilters(null, null, null, null, null, null, null, 20, 0);
@@ -151,17 +151,17 @@ class MissionServiceTests {
 
     @Test
     void getMissionById_WithValidId_ShouldReturnMission() {
-        // given
+        
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         MissionResponseDTO result = missionService.getMissionById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("MISSION-001", result.missionCode());
@@ -171,10 +171,10 @@ class MissionServiceTests {
 
     @Test
     void getMissionById_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(missionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         MissionNotFoundException exception = assertThrows(
                 MissionNotFoundException.class,
                 () -> missionService.getMissionById(999L)
@@ -186,7 +186,7 @@ class MissionServiceTests {
 
     @Test
     void getActiveMissions_ShouldReturnActiveMissions() {
-        // given
+        
         List<Mission> activeMissions = List.of(testMission);
         when(missionRepository.findActiveMissions(any(LocalDateTime.class))).thenReturn(activeMissions);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
@@ -194,10 +194,10 @@ class MissionServiceTests {
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         List<MissionResponseDTO> result = missionService.getActiveMissions();
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("MISSION-001", result.get(0).missionCode());
@@ -206,10 +206,10 @@ class MissionServiceTests {
 
     @Test
     void createMission_WithExistingMissionCode_ShouldThrowException() {
-        // given
+        
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(true);
 
-        // when & then
+        
         MissionAlreadyExistsException exception = assertThrows(
                 MissionAlreadyExistsException.class,
                 () -> missionService.createMission(testRequestDTO)
@@ -222,7 +222,7 @@ class MissionServiceTests {
 
     @Test
     void createMission_WithInvalidCommandingOfficer_ShouldThrowException() {
-        // given
+        
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(false);
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -233,7 +233,7 @@ class MissionServiceTests {
                 null, null, null, null, null, null
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> missionService.createMission(requestWithInvalidOfficer)
@@ -246,7 +246,7 @@ class MissionServiceTests {
 
     @Test
     void createMission_WithInvalidSpacecraft_ShouldThrowException() {
-        // given
+        
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
@@ -258,7 +258,7 @@ class MissionServiceTests {
                 null, null, null, null, null, null
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> missionService.createMission(requestWithInvalidSpacecraft)
@@ -271,7 +271,7 @@ class MissionServiceTests {
 
     @Test
     void updateMission_WithValidId_ShouldUpdateMission() {
-        // given
+        
         MissionRequestDTO updateRequest = new MissionRequestDTO(
                 "MISSION-001-UPDATED", "Updated Mission", MissionType.CARGO_TRANSPORT,
                 MissionPriority.HIGH, 1L, 1L,
@@ -287,10 +287,10 @@ class MissionServiceTests {
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         MissionResponseDTO result = missionService.updateMission(1L, updateRequest);
 
-        // then
+        
         assertNotNull(result);
         verify(missionRepository, times(1)).findById(1L);
         verify(missionRepository, times(1)).existsByMissionCode("MISSION-001-UPDATED");
@@ -299,10 +299,10 @@ class MissionServiceTests {
 
     @Test
     void updateMission_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(missionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         MissionNotFoundException exception = assertThrows(
                 MissionNotFoundException.class,
                 () -> missionService.updateMission(999L, testRequestDTO)
@@ -315,7 +315,7 @@ class MissionServiceTests {
 
     @Test
     void updateMission_WithExistingMissionCode_ShouldThrowException() {
-        // given
+        
         MissionRequestDTO updateRequest = new MissionRequestDTO(
                 "MISSION-002", "Updated Mission", MissionType.CARGO_TRANSPORT,
                 MissionPriority.HIGH, 1L, 1L,
@@ -326,7 +326,7 @@ class MissionServiceTests {
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(missionRepository.existsByMissionCode("MISSION-002")).thenReturn(true);
 
-        // when & then
+        
         MissionAlreadyExistsException exception = assertThrows(
                 MissionAlreadyExistsException.class,
                 () -> missionService.updateMission(1L, updateRequest)
@@ -339,7 +339,7 @@ class MissionServiceTests {
 
     @Test
     void updateMission_WithSameMissionCode_ShouldNotThrowException() {
-        // given
+        
         MissionRequestDTO updateRequest = new MissionRequestDTO(
                 "MISSION-001", "Updated Mission", MissionType.CARGO_TRANSPORT,
                 MissionPriority.HIGH, 1L, 1L,
@@ -354,10 +354,10 @@ class MissionServiceTests {
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         MissionResponseDTO result = missionService.updateMission(1L, updateRequest);
 
-        // then
+        
         assertNotNull(result);
         verify(missionRepository, never()).existsByMissionCode(anyString());
         verify(missionRepository, times(1)).save(any(Mission.class));
@@ -365,10 +365,10 @@ class MissionServiceTests {
 
     @Test
     void completeMission_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(missionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         MissionNotFoundException exception = assertThrows(
                 MissionNotFoundException.class,
                 () -> missionService.completeMission(999L, testRequestDTO)
@@ -381,17 +381,17 @@ class MissionServiceTests {
 
     @Test
     void toResponseDTO_WithValidMission_ShouldReturnResponseDTO() {
-        // given
+        
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(missionMapper.toResponseDTO(any(Mission.class), eq("John Doe"), eq("Enterprise")))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         MissionResponseDTO result = missionService.getMissionById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("John Doe", result.commandingOfficerName());
         assertEquals("Enterprise", result.spacecraftName());
@@ -401,11 +401,11 @@ class MissionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidCommandingOfficer_ShouldThrowException() {
-        // given
+        
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> missionService.getMissionById(1L)
@@ -417,12 +417,12 @@ class MissionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidSpacecraft_ShouldThrowException() {
-        // given
+        
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> missionService.getMissionById(1L)

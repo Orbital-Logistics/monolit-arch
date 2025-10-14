@@ -57,13 +57,13 @@ class UserControllerTests {
 
     @Test
     void registerUser_WithValidRequest_ShouldReturnCreatedResponse() {
-        // given
+        
         when(userService.registerUser(testRegistrationRequest)).thenReturn(testUserResponse);
 
-        // when
+        
         ResponseEntity<UserResponseDTO> response = userController.registerUser(testRegistrationRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -73,11 +73,11 @@ class UserControllerTests {
 
     @Test
     void registerUser_WithExistingEmail_ShouldPropagateException() {
-        // given
+        
         when(userService.registerUser(testRegistrationRequest))
                 .thenThrow(new UserAlreadyExistsException("User with email already exists"));
 
-        // when & then
+        
         UserAlreadyExistsException exception = assertThrows(
                 UserAlreadyExistsException.class,
                 () -> userController.registerUser(testRegistrationRequest)
@@ -89,13 +89,13 @@ class UserControllerTests {
 
     @Test
     void getUserByEmail_WithValidEmail_ShouldReturnUser() {
-        // given
+        
         when(userService.findUserByEmail("john.doe@example.com")).thenReturn(testUserResponse);
 
-        // when
+        
         ResponseEntity<UserResponseDTO> response = userController.getUserByEmail("john.doe@example.com");
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -105,11 +105,11 @@ class UserControllerTests {
 
     @Test
     void getUserByEmail_WithInvalidEmail_ShouldPropagateException() {
-        // given
+        
         when(userService.findUserByEmail("nonexistent@example.com"))
                 .thenThrow(new UserNotFoundException("User not found"));
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userController.getUserByEmail("nonexistent@example.com")
@@ -121,16 +121,16 @@ class UserControllerTests {
 
     @Test
     void getUsers_WithValidParameters_ShouldReturnPageResponse() {
-        // given
+        
         when(userService.getUsers("john.doe@example.com", "John", 0, 20))
                 .thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<UserResponseDTO>> response = userController.getUsers(
                 "john.doe@example.com", "John", 0, 20
         );
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -140,15 +140,15 @@ class UserControllerTests {
 
     @Test
     void getUsers_WithNullParameters_ShouldReturnAllUsers() {
-        // given
+        
         when(userService.getUsers(null, null, 0, 20)).thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<UserResponseDTO>> response = userController.getUsers(
                 null, null, 0, 20
         );
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -157,15 +157,15 @@ class UserControllerTests {
 
     @Test
     void getUsers_WithDefaultParameters_ShouldUseDefaults() {
-        // given
+        
         when(userService.getUsers(null, null, 0, 20)).thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<UserResponseDTO>> response = userController.getUsers(
                 null, null, 0, 20
         );
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(userService, times(1)).getUsers(null, null, 0, 20);
@@ -173,13 +173,13 @@ class UserControllerTests {
 
     @Test
     void getUserById_WithValidId_ShouldReturnUser() {
-        // given
+        
         when(userService.findUserById(1L)).thenReturn(testUserResponse);
 
-        // when
+        
         ResponseEntity<UserResponseDTO> response = userController.getUserById(1L);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -189,11 +189,11 @@ class UserControllerTests {
 
     @Test
     void getUserById_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         when(userService.findUserById(999L))
                 .thenThrow(new UserNotFoundException("User not found"));
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userController.getUserById(999L)
@@ -205,11 +205,11 @@ class UserControllerTests {
 
     @Test
     void updateUser_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         when(userService.updateUser(999L, testUpdateRequest))
                 .thenThrow(new UserNotFoundException("User not found"));
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userController.updateUser(999L, testUpdateRequest)
@@ -221,13 +221,13 @@ class UserControllerTests {
 
     @Test
     void deleteUser_WithValidId_ShouldReturnNoContent() {
-        // given
+        
         doNothing().when(userService).deleteUser(1L);
 
-        // when
+        
         ResponseEntity<Void> response = userController.deleteUser(1L);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         assertNull(response.getBody());
@@ -236,11 +236,11 @@ class UserControllerTests {
 
     @Test
     void deleteUser_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         doThrow(new UserNotFoundException("User not found"))
                 .when(userService).deleteUser(999L);
 
-        // when & then
+        
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
                 () -> userController.deleteUser(999L)
@@ -252,11 +252,11 @@ class UserControllerTests {
 
     @Test
     void registerUser_WithNullRequest_ShouldPropagateException() {
-        // given
+        
         when(userService.registerUser(null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userController.registerUser(null)
@@ -268,11 +268,11 @@ class UserControllerTests {
 
     @Test
     void updateUser_WithNullRequest_ShouldPropagateException() {
-        // given
+        
         when(userService.updateUser(1L, null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userController.updateUser(1L, null)

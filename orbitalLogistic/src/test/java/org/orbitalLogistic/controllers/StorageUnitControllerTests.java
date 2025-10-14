@@ -59,13 +59,13 @@ class StorageUnitControllerTests {
 
     @Test
     void getAllStorageUnits_WithValidParameters_ShouldReturnPageResponse() {
-        // given
+        
         when(storageUnitService.getStorageUnits(0, 20)).thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getAllStorageUnits(0, 20);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -76,13 +76,13 @@ class StorageUnitControllerTests {
 
     @Test
     void getAllStorageUnits_WithDefaultParameters_ShouldUseDefaults() {
-        // given
+        
         when(storageUnitService.getStorageUnits(0, 20)).thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getAllStorageUnits(0, 20);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(storageUnitService, times(1)).getStorageUnits(0, 20);
@@ -90,13 +90,13 @@ class StorageUnitControllerTests {
 
     @Test
     void getAllStorageUnits_WithCustomParameters_ShouldPassCorrectly() {
-        // given
+        
         when(storageUnitService.getStorageUnits(2, 10)).thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getAllStorageUnits(2, 10);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(storageUnitService, times(1)).getStorageUnits(2, 10);
@@ -104,13 +104,13 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitById_WithValidId_ShouldReturnStorageUnit() {
-        // given
+        
         when(storageUnitService.getStorageUnitById(1L)).thenReturn(testStorageUnitResponse);
 
-        // when
+        
         ResponseEntity<StorageUnitResponseDTO> response = storageUnitController.getStorageUnitById(1L);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -122,11 +122,11 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitById_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.getStorageUnitById(999L))
                 .thenThrow(new StorageUnitNotFoundException("Storage unit not found with id: 999"));
 
-        // when & then
+        
         StorageUnitNotFoundException exception = assertThrows(
                 StorageUnitNotFoundException.class,
                 () -> storageUnitController.getStorageUnitById(999L)
@@ -138,14 +138,14 @@ class StorageUnitControllerTests {
 
     @Test
     void createStorageUnit_WithValidRequest_ShouldReturnCreatedResponse() {
-        // given
+        
         when(storageUnitService.createStorageUnit(testStorageUnitRequest))
                 .thenReturn(testStorageUnitResponse);
 
-        // when
+        
         ResponseEntity<StorageUnitResponseDTO> response = storageUnitController.createStorageUnit(testStorageUnitRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -156,11 +156,11 @@ class StorageUnitControllerTests {
 
     @Test
     void createStorageUnit_WithExistingUnitCode_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.createStorageUnit(testStorageUnitRequest))
                 .thenThrow(new StorageUnitAlreadyExistsException("Storage unit with code already exists: SU-001"));
 
-        // when & then
+        
         StorageUnitAlreadyExistsException exception = assertThrows(
                 StorageUnitAlreadyExistsException.class,
                 () -> storageUnitController.createStorageUnit(testStorageUnitRequest)
@@ -172,11 +172,11 @@ class StorageUnitControllerTests {
 
     @Test
     void createStorageUnit_WithNullRequest_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.createStorageUnit(null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> storageUnitController.createStorageUnit(null)
@@ -188,7 +188,7 @@ class StorageUnitControllerTests {
 
     @Test
     void updateStorageUnit_WithValidId_ShouldReturnUpdatedStorageUnit() {
-        // given
+        
         StorageUnitResponseDTO updatedStorageUnit = new StorageUnitResponseDTO(
                 1L, "SU-001-UPDATED", "Warehouse B", StorageType.AMBIENT,
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0),
@@ -199,10 +199,10 @@ class StorageUnitControllerTests {
         when(storageUnitService.updateStorageUnit(1L, testStorageUnitRequest))
                 .thenReturn(updatedStorageUnit);
 
-        // when
+        
         ResponseEntity<StorageUnitResponseDTO> response = storageUnitController.updateStorageUnit(1L, testStorageUnitRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -214,11 +214,11 @@ class StorageUnitControllerTests {
 
     @Test
     void updateStorageUnit_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.updateStorageUnit(999L, testStorageUnitRequest))
                 .thenThrow(new StorageUnitNotFoundException("Storage unit not found with id: 999"));
 
-        // when & then
+        
         StorageUnitNotFoundException exception = assertThrows(
                 StorageUnitNotFoundException.class,
                 () -> storageUnitController.updateStorageUnit(999L, testStorageUnitRequest)
@@ -230,11 +230,11 @@ class StorageUnitControllerTests {
 
     @Test
     void updateStorageUnit_WithExistingUnitCode_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.updateStorageUnit(1L, testStorageUnitRequest))
                 .thenThrow(new StorageUnitAlreadyExistsException("Storage unit with code already exists: SU-001"));
 
-        // when & then
+        
         StorageUnitAlreadyExistsException exception = assertThrows(
                 StorageUnitAlreadyExistsException.class,
                 () -> storageUnitController.updateStorageUnit(1L, testStorageUnitRequest)
@@ -246,11 +246,11 @@ class StorageUnitControllerTests {
 
     @Test
     void updateStorageUnit_WithNullRequest_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.updateStorageUnit(1L, null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> storageUnitController.updateStorageUnit(1L, null)
@@ -262,14 +262,14 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitInventory_WithValidId_ShouldReturnInventory() {
-        // given
+        
         when(storageUnitService.getStorageUnitInventory(1L, 0, 20))
                 .thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getStorageUnitInventory(1L, 0, 20);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -279,14 +279,14 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitInventory_WithDefaultParameters_ShouldUseDefaults() {
-        // given
+        
         when(storageUnitService.getStorageUnitInventory(1L, 0, 20))
                 .thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getStorageUnitInventory(1L, 0, 20);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(storageUnitService, times(1)).getStorageUnitInventory(1L, 0, 20);
@@ -294,14 +294,14 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitInventory_WithCustomParameters_ShouldPassCorrectly() {
-        // given
+        
         when(storageUnitService.getStorageUnitInventory(1L, 2, 10))
                 .thenReturn(testPageResponse);
 
-        // when
+        
         ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> response = storageUnitController.getStorageUnitInventory(1L, 2, 10);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(storageUnitService, times(1)).getStorageUnitInventory(1L, 2, 10);
@@ -309,11 +309,11 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitInventory_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.getStorageUnitInventory(1L, 0, 20))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> storageUnitController.getStorageUnitInventory(1L, 0, 20)
@@ -325,11 +325,11 @@ class StorageUnitControllerTests {
 
     @Test
     void getAllStorageUnits_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.getStorageUnits(0, 20))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> storageUnitController.getAllStorageUnits(0, 20)
@@ -341,11 +341,11 @@ class StorageUnitControllerTests {
 
     @Test
     void getStorageUnitById_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(storageUnitService.getStorageUnitById(1L))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> storageUnitController.getStorageUnitById(1L)

@@ -35,42 +35,42 @@ class SpacecraftTypeControllerTests {
     @BeforeEach
     void setUp() {
         testSpacecraftTypeResponse = new SpacecraftTypeResponseDTO(
-                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 // Исправлено PERSONNEL_TRANSPORT на CARGO_HAULER
+                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 
         );
 
         testSpacecraftTypeRequest = new SpacecraftTypeRequestDTO(
-                "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 // Исправлено PERSONNEL_TRANSPORT на CARGO_HAULER
+                "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 
         );
     }
 
     @Test
     void getAllSpacecraftTypes_ShouldReturnListOfTypes() {
-        // given
+        
         List<SpacecraftTypeResponseDTO> types = List.of(testSpacecraftTypeResponse);
         when(spacecraftTypeService.getAllSpacecraftTypes()).thenReturn(types);
 
-        // when
+        
         ResponseEntity<List<SpacecraftTypeResponseDTO>> response = spacecraftTypeController.getAllSpacecraftTypes();
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
         assertEquals("Cargo Ship", response.getBody().get(0).typeName());
-        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().get(0).classification()); // Исправлено CARGO на CARGO_HAULER
+        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().get(0).classification()); 
         verify(spacecraftTypeService, times(1)).getAllSpacecraftTypes();
     }
 
     @Test
     void getAllSpacecraftTypes_WhenNoTypes_ShouldReturnEmptyList() {
-        // given
+        
         when(spacecraftTypeService.getAllSpacecraftTypes()).thenReturn(List.of());
 
-        // when
+        
         ResponseEntity<List<SpacecraftTypeResponseDTO>> response = spacecraftTypeController.getAllSpacecraftTypes();
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -80,20 +80,20 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void getAllSpacecraftTypes_WithMultipleTypes_ShouldReturnAllTypes() {
-        // given
+        
         SpacecraftTypeResponseDTO type1 = new SpacecraftTypeResponseDTO(
-                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 // Исправлено CARGO на CARGO_HAULER
+                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 
         );
         SpacecraftTypeResponseDTO type2 = new SpacecraftTypeResponseDTO(
-                2L, "Science Vessel", SpacecraftClassification.SCIENCE_VESSEL, 5 // Исправлено PASSENGER на SCIENCE_VESSEL
+                2L, "Science Vessel", SpacecraftClassification.SCIENCE_VESSEL, 5 
         );
         List<SpacecraftTypeResponseDTO> types = List.of(type1, type2);
         when(spacecraftTypeService.getAllSpacecraftTypes()).thenReturn(types);
 
-        // when
+        
         ResponseEntity<List<SpacecraftTypeResponseDTO>> response = spacecraftTypeController.getAllSpacecraftTypes();
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -105,29 +105,29 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void getSpacecraftTypeById_WithValidId_ShouldReturnType() {
-        // given
+        
         when(spacecraftTypeService.getSpacecraftTypeById(1L)).thenReturn(testSpacecraftTypeResponse);
 
-        // when
+        
         ResponseEntity<SpacecraftTypeResponseDTO> response = spacecraftTypeController.getSpacecraftTypeById(1L);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1L, response.getBody().id());
         assertEquals("Cargo Ship", response.getBody().typeName());
-        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().classification()); // Исправлено CARGO на CARGO_HAULER
+        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().classification()); 
         verify(spacecraftTypeService, times(1)).getSpacecraftTypeById(1L);
     }
 
     @Test
     void getSpacecraftTypeById_WithInvalidId_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.getSpacecraftTypeById(999L))
                 .thenThrow(new SpacecraftTypeNotFoundException("Spacecraft type not found with id: 999"));
 
-        // when & then
+        
         SpacecraftTypeNotFoundException exception = assertThrows(
                 SpacecraftTypeNotFoundException.class,
                 () -> spacecraftTypeController.getSpacecraftTypeById(999L)
@@ -139,37 +139,37 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void createSpacecraftType_WithValidRequest_ShouldReturnCreatedResponse() {
-        // given
+        
         when(spacecraftTypeService.createSpacecraftType(testSpacecraftTypeRequest))
                 .thenReturn(testSpacecraftTypeResponse);
 
-        // when
+        
         ResponseEntity<SpacecraftTypeResponseDTO> response = spacecraftTypeController.createSpacecraftType(testSpacecraftTypeRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Cargo Ship", response.getBody().typeName());
-        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().classification()); // Исправлено CARGO на CARGO_HAULER
+        assertEquals(SpacecraftClassification.CARGO_HAULER, response.getBody().classification()); 
         verify(spacecraftTypeService, times(1)).createSpacecraftType(testSpacecraftTypeRequest);
     }
 
     @Test
     void createSpacecraftType_WithMinimalRequest_ShouldReturnCreatedResponse() {
-        // given
+        
         SpacecraftTypeRequestDTO minimalRequest = new SpacecraftTypeRequestDTO(
-                "Minimal Ship", SpacecraftClassification.CARGO_HAULER, 5 // Исправлено CARGO на CARGO_HAULER
+                "Minimal Ship", SpacecraftClassification.CARGO_HAULER, 5 
         );
         SpacecraftTypeResponseDTO minimalResponse = new SpacecraftTypeResponseDTO(
-                1L, "Minimal Ship", SpacecraftClassification.CARGO_HAULER, 5 // Исправлено CARGO на CARGO_HAULER
+                1L, "Minimal Ship", SpacecraftClassification.CARGO_HAULER, 5 
         );
         when(spacecraftTypeService.createSpacecraftType(minimalRequest)).thenReturn(minimalResponse);
 
-        // when
+        
         ResponseEntity<SpacecraftTypeResponseDTO> response = spacecraftTypeController.createSpacecraftType(minimalRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -179,35 +179,35 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void createSpacecraftType_WithFullRequest_ShouldReturnCreatedResponse() {
-        // given
+        
         SpacecraftTypeRequestDTO fullRequest = new SpacecraftTypeRequestDTO(
-                "Full Ship", SpacecraftClassification.PERSONNEL_TRANSPORT, 20 // Убраны лишние параметры
+                "Full Ship", SpacecraftClassification.PERSONNEL_TRANSPORT, 20 
         );
         SpacecraftTypeResponseDTO fullResponse = new SpacecraftTypeResponseDTO(
-                1L, "Full Ship", SpacecraftClassification.PERSONNEL_TRANSPORT, 20 // Убраны лишние параметры
+                1L, "Full Ship", SpacecraftClassification.PERSONNEL_TRANSPORT, 20 
         );
         when(spacecraftTypeService.createSpacecraftType(fullRequest)).thenReturn(fullResponse);
 
-        // when
+        
         ResponseEntity<SpacecraftTypeResponseDTO> response = spacecraftTypeController.createSpacecraftType(fullRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Full Ship", response.getBody().typeName());
         assertEquals(SpacecraftClassification.PERSONNEL_TRANSPORT, response.getBody().classification());
-        assertEquals(20, response.getBody().maxCrewCapacity()); // Исправлено maxCrewSize() на maxCrewCapacity()
+        assertEquals(20, response.getBody().maxCrewCapacity()); 
         verify(spacecraftTypeService, times(1)).createSpacecraftType(fullRequest);
     }
 
     @Test
     void createSpacecraftType_WithNullRequest_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.createSpacecraftType(null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> spacecraftTypeController.createSpacecraftType(null)
@@ -219,11 +219,11 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void createSpacecraftType_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.createSpacecraftType(testSpacecraftTypeRequest))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> spacecraftTypeController.createSpacecraftType(testSpacecraftTypeRequest)
@@ -235,11 +235,11 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void createSpacecraftType_WithValidationError_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.createSpacecraftType(testSpacecraftTypeRequest))
                 .thenThrow(new IllegalArgumentException("Validation failed"));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> spacecraftTypeController.createSpacecraftType(testSpacecraftTypeRequest)
@@ -251,11 +251,11 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void getSpacecraftTypeById_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.getSpacecraftTypeById(1L))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> spacecraftTypeController.getSpacecraftTypeById(1L)
@@ -267,11 +267,11 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void getAllSpacecraftTypes_WithServiceException_ShouldPropagateException() {
-        // given
+        
         when(spacecraftTypeService.getAllSpacecraftTypes())
                 .thenThrow(new RuntimeException("Service error"));
 
-        // when & then
+        
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> spacecraftTypeController.getAllSpacecraftTypes()
@@ -283,7 +283,7 @@ class SpacecraftTypeControllerTests {
 
     @Test
     void createSpacecraftType_WithScienceVessel_ShouldReturnCreatedResponse() {
-        // given
+        
         SpacecraftTypeRequestDTO scienceRequest = new SpacecraftTypeRequestDTO(
                 "Science Vessel", SpacecraftClassification.SCIENCE_VESSEL, 15
         );
@@ -292,10 +292,10 @@ class SpacecraftTypeControllerTests {
         );
         when(spacecraftTypeService.createSpacecraftType(scienceRequest)).thenReturn(scienceResponse);
 
-        // when
+        
         ResponseEntity<SpacecraftTypeResponseDTO> response = spacecraftTypeController.createSpacecraftType(scienceRequest);
 
-        // then
+        
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());

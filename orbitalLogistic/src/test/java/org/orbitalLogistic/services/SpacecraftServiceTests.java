@@ -63,7 +63,7 @@ class SpacecraftServiceTests {
                 .spacecraftTypeId(1L)
                 .massCapacity(BigDecimal.valueOf(1000.0))
                 .volumeCapacity(BigDecimal.valueOf(500.0))
-                .status(SpacecraftStatus.DOCKED) // Исправлено: DOCKED вместо ACTIVE
+                .status(SpacecraftStatus.DOCKED) 
                 .currentLocation("Earth Orbit")
                 .build();
 
@@ -75,13 +75,13 @@ class SpacecraftServiceTests {
 
         testRequestDTO = new SpacecraftRequestDTO(
                 "NCC-1701", "Enterprise", 1L, BigDecimal.valueOf(1000.0),
-                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" // Исправлено: DOCKED вместо ACTIVE
+                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" 
         );
     }
 
     @Test
     void getSpacecrafts_WithValidFilters_ShouldReturnPageResponse() {
-        // given
+        
         List<Spacecraft> spacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findWithFilters("Enterprise", "DOCKED", 20, 0))
                 .thenReturn(spacecrafts);
@@ -89,13 +89,13 @@ class SpacecraftServiceTests {
                 .thenReturn(1L);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<SpacecraftResponseDTO> result = spacecraftService.getSpacecrafts("Enterprise", "DOCKED", 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -110,7 +110,7 @@ class SpacecraftServiceTests {
 
     @Test
     void getSpacecrafts_WithNullFilters_ShouldReturnAllSpacecrafts() {
-        // given
+        
         List<Spacecraft> spacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findWithFilters(null, null, 20, 0))
                 .thenReturn(spacecrafts);
@@ -118,13 +118,13 @@ class SpacecraftServiceTests {
                 .thenReturn(1L);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<SpacecraftResponseDTO> result = spacecraftService.getSpacecrafts(null, null, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         verify(spacecraftRepository, times(1)).findWithFilters(null, null, 20, 0);
@@ -132,19 +132,19 @@ class SpacecraftServiceTests {
 
     @Test
     void getSpacecraftsScroll_WithValidParameters_ShouldReturnList() {
-        // given
+        
         List<Spacecraft> spacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findWithFilters(null, null, 21, 0))
                 .thenReturn(spacecrafts);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         List<SpacecraftResponseDTO> result = spacecraftService.getSpacecraftsScroll(0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Enterprise", result.get(0).name());
@@ -153,17 +153,17 @@ class SpacecraftServiceTests {
 
     @Test
     void getSpacecraftById_WithValidId_ShouldReturnSpacecraft() {
-        // given
+        
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.getSpacecraftById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Enterprise", result.name());
@@ -172,10 +172,10 @@ class SpacecraftServiceTests {
 
     @Test
     void getSpacecraftById_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         SpacecraftNotFoundException exception = assertThrows(
                 SpacecraftNotFoundException.class,
                 () -> spacecraftService.getSpacecraftById(999L)
@@ -187,10 +187,10 @@ class SpacecraftServiceTests {
 
     @Test
     void createSpacecraft_WithExistingRegistryCode_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.existsByRegistryCode("NCC-1701")).thenReturn(true);
 
-        // when & then
+        
         SpacecraftAlreadyExistsException exception = assertThrows(
                 SpacecraftAlreadyExistsException.class,
                 () -> spacecraftService.createSpacecraft(testRequestDTO)
@@ -203,16 +203,16 @@ class SpacecraftServiceTests {
 
     @Test
     void createSpacecraft_WithInvalidTypeId_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.existsByRegistryCode("NCC-1701")).thenReturn(false);
         when(spacecraftTypeRepository.findById(999L)).thenReturn(Optional.empty());
 
         SpacecraftRequestDTO requestWithInvalidType = new SpacecraftRequestDTO(
                 "NCC-1701", "Enterprise", 999L, BigDecimal.valueOf(1000.0),
-                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" // Исправлено: DOCKED вместо ACTIVE
+                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" 
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> spacecraftService.createSpacecraft(requestWithInvalidType)
@@ -225,7 +225,7 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraft_WithValidId_ShouldUpdateSpacecraft() {
-        // given
+        
         SpacecraftRequestDTO updateRequest = new SpacecraftRequestDTO(
                 "NCC-1701-A", "Enterprise-A", 1L, BigDecimal.valueOf(1200.0),
                 BigDecimal.valueOf(600.0), SpacecraftStatus.MAINTENANCE, "Mars Orbit"
@@ -237,13 +237,13 @@ class SpacecraftServiceTests {
         when(spacecraftRepository.save(any(Spacecraft.class))).thenReturn(testSpacecraft);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.updateSpacecraft(1L, updateRequest);
 
-        // then
+        
         assertNotNull(result);
         verify(spacecraftRepository, times(1)).findById(1L);
         verify(spacecraftRepository, times(1)).existsByRegistryCode("NCC-1701-A");
@@ -252,10 +252,10 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraft_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         SpacecraftNotFoundException exception = assertThrows(
                 SpacecraftNotFoundException.class,
                 () -> spacecraftService.updateSpacecraft(999L, testRequestDTO)
@@ -268,16 +268,16 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraft_WithExistingRegistryCode_ShouldThrowException() {
-        // given
+        
         SpacecraftRequestDTO updateRequest = new SpacecraftRequestDTO(
                 "NCC-1702", "Enterprise", 1L, BigDecimal.valueOf(1000.0),
-                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" // Исправлено: DOCKED вместо ACTIVE
+                BigDecimal.valueOf(500.0), SpacecraftStatus.DOCKED, "Earth Orbit" 
         );
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftRepository.existsByRegistryCode("NCC-1702")).thenReturn(true);
 
-        // when & then
+        
         SpacecraftAlreadyExistsException exception = assertThrows(
                 SpacecraftAlreadyExistsException.class,
                 () -> spacecraftService.updateSpacecraft(1L, updateRequest)
@@ -290,7 +290,7 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraft_WithSameRegistryCode_ShouldNotThrowException() {
-        // given
+        
         SpacecraftRequestDTO updateRequest = new SpacecraftRequestDTO(
                 "NCC-1701", "Enterprise Updated", 1L, BigDecimal.valueOf(1200.0),
                 BigDecimal.valueOf(600.0), SpacecraftStatus.MAINTENANCE, "Mars Orbit"
@@ -301,13 +301,13 @@ class SpacecraftServiceTests {
         when(spacecraftRepository.save(any(Spacecraft.class))).thenReturn(testSpacecraft);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.updateSpacecraft(1L, updateRequest);
 
-        // then
+        
         assertNotNull(result);
         verify(spacecraftRepository, never()).existsByRegistryCode(anyString());
         verify(spacecraftRepository, times(1)).save(any(Spacecraft.class));
@@ -315,7 +315,7 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraft_WithNullStatus_ShouldKeepExistingStatus() {
-        // given
+        
         SpacecraftRequestDTO updateRequest = new SpacecraftRequestDTO(
                 "NCC-1701", "Enterprise Updated", 1L, BigDecimal.valueOf(1200.0),
                 BigDecimal.valueOf(600.0), null, "Mars Orbit"
@@ -326,36 +326,36 @@ class SpacecraftServiceTests {
         when(spacecraftRepository.save(any(Spacecraft.class))).thenReturn(testSpacecraft);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.updateSpacecraft(1L, updateRequest);
 
-        // then
+        
         assertNotNull(result);
         verify(spacecraftRepository, times(1)).save(any(Spacecraft.class));
     }
 
     @Test
     void deleteSpacecraft_WithValidId_ShouldDeleteSpacecraft() {
-        // given
+        
         when(spacecraftRepository.existsById(1L)).thenReturn(true);
 
-        // when
+        
         spacecraftService.deleteSpacecraft(1L);
 
-        // then
+        
         verify(spacecraftRepository, times(1)).existsById(1L);
         verify(spacecraftRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void deleteSpacecraft_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.existsById(999L)).thenReturn(false);
 
-        // when & then
+        
         SpacecraftNotFoundException exception = assertThrows(
                 SpacecraftNotFoundException.class,
                 () -> spacecraftService.deleteSpacecraft(999L)
@@ -368,18 +368,18 @@ class SpacecraftServiceTests {
 
     @Test
     void getAvailableSpacecrafts_ShouldReturnAvailableSpacecrafts() {
-        // given
+        
         List<Spacecraft> availableSpacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findAvailableForMission()).thenReturn(availableSpacecrafts);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         List<SpacecraftResponseDTO> result = spacecraftService.getAvailableSpacecrafts();
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Enterprise", result.get(0).name());
@@ -388,18 +388,18 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraftStatus_WithValidId_ShouldUpdateStatus() {
-        // given
+        
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftRepository.save(any(Spacecraft.class))).thenReturn(testSpacecraft);
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.updateSpacecraftStatus(1L, SpacecraftStatus.MAINTENANCE);
 
-        // then
+        
         assertNotNull(result);
         verify(spacecraftRepository, times(1)).findById(1L);
         verify(spacecraftRepository, times(1)).save(any(Spacecraft.class));
@@ -407,10 +407,10 @@ class SpacecraftServiceTests {
 
     @Test
     void updateSpacecraftStatus_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         SpacecraftNotFoundException exception = assertThrows(
                 SpacecraftNotFoundException.class,
                 () -> spacecraftService.updateSpacecraftStatus(999L, SpacecraftStatus.MAINTENANCE)
@@ -423,30 +423,30 @@ class SpacecraftServiceTests {
 
     @Test
     void toResponseDTO_WithValidSpacecraft_ShouldReturnResponseDTO() {
-        // given
+        
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
-                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) // Исправлено: CARGO_HAULER вместо CARGO
+                eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO))) 
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         SpacecraftResponseDTO result = spacecraftService.getSpacecraftById(1L);
 
-        // then
+        
         assertNotNull(result);
-        assertEquals("Cargo Ship", result.spacecraftTypeName()); // Исправлено: spacecraftTypeName вместо typeName
-        assertEquals(SpacecraftClassification.CARGO_HAULER, result.classification()); // Исправлено: CARGO_HAULER вместо CARGO
+        assertEquals("Cargo Ship", result.spacecraftTypeName()); 
+        assertEquals(SpacecraftClassification.CARGO_HAULER, result.classification()); 
         verify(spacecraftTypeRepository, times(1)).findById(1L);
     }
 
     @Test
     void toResponseDTO_WithInvalidType_ShouldThrowException() {
-        // given
+        
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> spacecraftService.getSpacecraftById(1L)

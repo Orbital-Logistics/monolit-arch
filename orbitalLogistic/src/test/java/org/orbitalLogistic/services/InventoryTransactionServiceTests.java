@@ -118,7 +118,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getAllTransactions_WithValidParameters_ShouldReturnPageResponse() {
-        // given
+        
         List<InventoryTransaction> transactions = List.of(testTransaction);
         when(inventoryTransactionRepository.count()).thenReturn(1L);
         when(inventoryTransactionRepository.findAll()).thenReturn(transactions);
@@ -126,14 +126,14 @@ class InventoryTransactionServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        // Используем any() матчеры для всех аргументов
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getAllTransactions(0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -146,14 +146,14 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getAllTransactions_WithNoTransactions_ShouldReturnEmptyPage() {
-        // given
+        
         when(inventoryTransactionRepository.count()).thenReturn(0L);
         when(inventoryTransactionRepository.findAll()).thenReturn(List.of());
 
-        // when
+        
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getAllTransactions(0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -163,20 +163,20 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getTransactionById_WithValidId_ShouldReturnTransaction() {
-        // given
+        
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        // Используем any() матчеры
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Scientific Equipment", result.cargoName());
@@ -186,10 +186,10 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getTransactionById_WithInvalidId_ShouldThrowException() {
-        // given
+        
         when(inventoryTransactionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         InventoryTransactionNotFoundException exception = assertThrows(
                 InventoryTransactionNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(999L)
@@ -201,21 +201,21 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getCargoHistory_WithValidCargoId_ShouldReturnPageResponse() {
-        // given
+        
         List<InventoryTransaction> transactions = List.of(testTransaction);
         when(inventoryTransactionRepository.findByCargoIdOrderByTransactionDate(1L)).thenReturn(transactions);
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        // Используем any() матчеры
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getCargoHistory(1L, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -227,13 +227,13 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getCargoHistory_WithNoTransactions_ShouldReturnEmptyPage() {
-        // given
+        
         when(inventoryTransactionRepository.findByCargoIdOrderByTransactionDate(1L)).thenReturn(List.of());
 
-        // when
+        
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getCargoHistory(1L, 0, 20);
 
-        // then
+        
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -242,16 +242,16 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithNullStorageUnits_ShouldThrowException() {
-        // given
+        
         InventoryTransactionRequestDTO requestWithNullStorages = new InventoryTransactionRequestDTO(
                 TransactionType.TRANSFER, 1L, 100, null, null, null, null, 1L, "TRANSFER", "REF-001", "Invalid transfer"
         );
 
-        // Настраиваем моки для проверки сущностей
+        
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        // when & then
+        
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithNullStorages)
@@ -263,14 +263,14 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidCargo_ShouldThrowException() {
-        // given
+        
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
         InventoryTransactionRequestDTO requestWithInvalidCargo = new InventoryTransactionRequestDTO(
                 TransactionType.TRANSFER, 999L, 100, 1L, 2L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidCargo)
@@ -283,7 +283,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidUser_ShouldThrowException() {
-        // given
+        
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -291,7 +291,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 1L, 2L, null, null, 999L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidUser)
@@ -304,7 +304,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidFromStorage_ShouldThrowException() {
-        // given
+        
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
@@ -313,7 +313,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 999L, 2L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidFromStorage)
@@ -326,7 +326,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidToStorage_ShouldThrowException() {
-        // given
+        
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
@@ -336,7 +336,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 1L, 999L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidToStorage)
@@ -349,20 +349,20 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithStorageUnit_ShouldReturnStorageLocation() {
-        // given
+        
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        // Используем any() матчеры
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("Storage: SU-001", result.fromLocation());
         assertEquals("Storage: SU-002", result.toLocation());
@@ -372,7 +372,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithSpacecraft_ShouldReturnSpacecraftLocation() {
-        // given
+        
         InventoryTransaction spacecraftTransaction = InventoryTransaction.builder()
                 .id(2L)
                 .cargoId(1L)
@@ -384,7 +384,7 @@ class InventoryTransactionServiceTests {
                 .transactionDate(LocalDateTime.now())
                 .build();
 
-        // Создаем специальный responseDTO для spacecraft
+        
         InventoryTransactionResponseDTO spacecraftResponseDTO = new InventoryTransactionResponseDTO(
                 2L, TransactionType.TRANSFER, "Scientific Equipment", 100,
                 "Spacecraft: Enterprise", "Spacecraft: Enterprise", "John Doe",
@@ -396,14 +396,14 @@ class InventoryTransactionServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftRepository.findById(2L)).thenReturn(Optional.of(testSpacecraft));
-        // Используем any() матчеры
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(spacecraftResponseDTO);
 
-        // when
+        
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(2L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("Spacecraft: Enterprise", result.fromLocation());
         assertEquals("Spacecraft: Enterprise", result.toLocation());
@@ -413,7 +413,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithUnknownLocation_ShouldReturnUnknown() {
-        // given
+        
         InventoryTransaction unknownTransaction = InventoryTransaction.builder()
                 .id(3L)
                 .cargoId(1L)
@@ -427,7 +427,7 @@ class InventoryTransactionServiceTests {
                 .transactionDate(LocalDateTime.now())
                 .build();
 
-        // Создаем специальный responseDTO для unknown location
+        
         InventoryTransactionResponseDTO unknownResponseDTO = new InventoryTransactionResponseDTO(
                 3L, TransactionType.TRANSFER, "Scientific Equipment", 100,
                 "Unknown Location", "Unknown Location", "John Doe",
@@ -437,14 +437,14 @@ class InventoryTransactionServiceTests {
         when(inventoryTransactionRepository.findById(3L)).thenReturn(Optional.of(unknownTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        // Используем any() матчеры
+        
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(unknownResponseDTO);
 
-        // when
+        
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(3L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals("Unknown Location", result.fromLocation());
         assertEquals("Unknown Location", result.toLocation());
@@ -452,11 +452,11 @@ class InventoryTransactionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidCargo_ShouldThrowException() {
-        // given
+        
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(1L)
@@ -468,12 +468,12 @@ class InventoryTransactionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidUser_ShouldThrowException() {
-        // given
+        
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(1L)

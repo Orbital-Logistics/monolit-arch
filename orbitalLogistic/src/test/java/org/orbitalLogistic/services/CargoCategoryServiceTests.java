@@ -57,16 +57,16 @@ class CargoCategoryServiceTests {
 
     @Test
     void getAllCategories_ShouldReturnListOfCategories() {
-        // given
+        
         List<CargoCategory> categories = List.of(testCategory);
         when(cargoCategoryRepository.findAll()).thenReturn(categories);
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         List<CargoCategoryResponseDTO> result = cargoCategoryService.getAllCategories();
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Electronics", result.get(0).name());
@@ -75,13 +75,13 @@ class CargoCategoryServiceTests {
 
     @Test
     void getAllCategories_WhenNoCategories_ShouldReturnEmptyList() {
-        // given
+        
         when(cargoCategoryRepository.findAll()).thenReturn(List.of());
 
-        // when
+        
         List<CargoCategoryResponseDTO> result = cargoCategoryService.getAllCategories();
 
-        // then
+        
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(cargoCategoryRepository, times(1)).findAll();
@@ -89,15 +89,15 @@ class CargoCategoryServiceTests {
 
     @Test
     void getCategoryById_WithValidId_ShouldReturnCategory() {
-        // given
+        
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         CargoCategoryResponseDTO result = cargoCategoryService.getCategoryById(1L);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Electronics", result.name());
@@ -106,10 +106,10 @@ class CargoCategoryServiceTests {
 
     @Test
     void getCategoryById_WithInvalidId_ShouldThrowCargoCategoryNotFoundException() {
-        // given
+        
         when(cargoCategoryRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         CargoCategoryNotFoundException exception = assertThrows(
                 CargoCategoryNotFoundException.class,
                 () -> cargoCategoryService.getCategoryById(999L)
@@ -121,7 +121,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void getCategoryTree_ShouldReturnRootCategoriesWithChildren() {
-        // given
+        
         CargoCategory rootCategory = CargoCategory.builder()
                 .id(1L)
                 .name("Root")
@@ -145,19 +145,19 @@ class CargoCategoryServiceTests {
         when(cargoCategoryRepository.findByParentCategoryIdIsNull()).thenReturn(List.of(rootCategory));
         when(cargoCategoryRepository.findByParentCategoryId(1L)).thenReturn(List.of(childCategory));
 
-        // Используем lenient() чтобы избежать PotentialStubbingProblem
+        
         lenient().when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(rootCategory));
 
-        // Более гибкие моки для mapper
+        
         when(cargoCategoryMapper.toResponseDTO(eq(rootCategory), isNull(), anyList(), eq(0)))
                 .thenReturn(rootResponseDTO);
         when(cargoCategoryMapper.toResponseDTO(eq(childCategory), eq("Root"), anyList(), eq(1)))
                 .thenReturn(childResponseDTO);
 
-        // when
+        
         List<CargoCategoryResponseDTO> result = cargoCategoryService.getCategoryTree();
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Root", result.get(0).name());
@@ -167,7 +167,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void getCategoryTree_WithMultipleRoots_ShouldReturnAllRootCategories() {
-        // given
+        
         CargoCategory root1 = CargoCategory.builder().id(1L).name("Root1").parentCategoryId(null).build();
         CargoCategory root2 = CargoCategory.builder().id(2L).name("Root2").parentCategoryId(null).build();
 
@@ -177,16 +177,16 @@ class CargoCategoryServiceTests {
         when(cargoCategoryRepository.findByParentCategoryIdIsNull()).thenReturn(List.of(root1, root2));
         when(cargoCategoryRepository.findByParentCategoryId(anyLong())).thenReturn(List.of());
 
-        // Гибкие моки для разных вызовов
+        
         when(cargoCategoryMapper.toResponseDTO(eq(root1), isNull(), eq(List.of()), eq(0)))
                 .thenReturn(root1Response);
         when(cargoCategoryMapper.toResponseDTO(eq(root2), isNull(), eq(List.of()), eq(0)))
                 .thenReturn(root2Response);
 
-        // when
+        
         List<CargoCategoryResponseDTO> result = cargoCategoryService.getCategoryTree();
 
-        // then
+        
         assertNotNull(result);
         assertEquals(2, result.size());
         verify(cargoCategoryRepository, times(1)).findByParentCategoryIdIsNull();
@@ -194,16 +194,16 @@ class CargoCategoryServiceTests {
 
     @Test
     void createCategory_WithValidRequest_ShouldCreateCategory() {
-        // given
+        
         when(cargoCategoryMapper.toEntity(testRequestDTO)).thenReturn(testCategory);
         when(cargoCategoryRepository.save(testCategory)).thenReturn(testCategory);
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(testResponseDTO);
 
-        // when
+        
         CargoCategoryResponseDTO result = cargoCategoryService.createCategory(testRequestDTO);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Electronics", result.name());
@@ -213,7 +213,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void createCategory_WithValidParentId_ShouldCreateCategory() {
-        // given
+        
         CargoCategoryRequestDTO requestWithParent = new CargoCategoryRequestDTO(
                 "Laptop", 1L, "Portable computers"
         );
@@ -234,7 +234,7 @@ class CargoCategoryServiceTests {
                 2L, "Laptop", 1L, "Electronics", "Portable computers", List.of(), 0
         );
 
-        // Используем lenient() для дополнительных вызовов findById
+        
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(parentCategory));
         lenient().when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(parentCategory));
 
@@ -243,28 +243,28 @@ class CargoCategoryServiceTests {
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(responseWithParent);
 
-        // when
+        
         CargoCategoryResponseDTO result = cargoCategoryService.createCategory(requestWithParent);
 
-        // then
+        
         assertNotNull(result);
         assertEquals(1L, result.parentCategoryId());
         assertEquals("Electronics", result.parentCategoryName());
-        // Проверяем что findById вызывался, но не ограничиваем точное количество
+        
         verify(cargoCategoryRepository, atLeastOnce()).findById(1L);
         verify(cargoCategoryRepository, times(1)).save(newCategory);
     }
 
     @Test
     void createCategory_WithInvalidParentId_ShouldThrowDataNotFoundException() {
-        // given
+        
         CargoCategoryRequestDTO requestWithInvalidParent = new CargoCategoryRequestDTO(
                 "Laptop", 999L, "Portable computers"
         );
 
         when(cargoCategoryRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // when & then
+        
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoCategoryService.createCategory(requestWithInvalidParent)
@@ -277,7 +277,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void createCategory_WithNullParentId_ShouldCreateRootCategory() {
-        // given
+        
         CargoCategoryRequestDTO requestWithNullParent = new CargoCategoryRequestDTO(
                 "Root Category", null, "Root level category"
         );
@@ -298,10 +298,10 @@ class CargoCategoryServiceTests {
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(rootResponse);
 
-        // when
+        
         CargoCategoryResponseDTO result = cargoCategoryService.createCategory(requestWithNullParent);
 
-        // then
+        
         assertNotNull(result);
         assertNull(result.parentCategoryId());
         assertNull(result.parentCategoryName());
@@ -311,7 +311,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void buildCategoryTree_WithDeepNesting_ShouldBuildCompleteTree() {
-        // given
+        
         CargoCategory root = CargoCategory.builder().id(1L).name("Root").parentCategoryId(null).build();
         CargoCategory child = CargoCategory.builder().id(2L).name("Child").parentCategoryId(1L).build();
         CargoCategory grandchild = CargoCategory.builder().id(3L).name("Grandchild").parentCategoryId(2L).build();
@@ -321,12 +321,12 @@ class CargoCategoryServiceTests {
         when(cargoCategoryRepository.findByParentCategoryId(2L)).thenReturn(List.of(grandchild));
         when(cargoCategoryRepository.findByParentCategoryId(3L)).thenReturn(List.of());
 
-        // Моки для parent category lookups
+        
         lenient().when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.empty());
         lenient().when(cargoCategoryRepository.findById(2L)).thenReturn(Optional.of(root));
         lenient().when(cargoCategoryRepository.findById(3L)).thenReturn(Optional.of(child));
 
-        // Гибкий мок для mapper
+        
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenAnswer(invocation -> {
                     CargoCategory category = invocation.getArgument(0);
@@ -339,12 +339,12 @@ class CargoCategoryServiceTests {
                     );
                 });
 
-        // when
+        
         List<CargoCategoryResponseDTO> result = cargoCategoryService.getCategoryTree();
 
-        // then
+        
         assertNotNull(result);
-        // Проверяем что методы вызывались нужное количество раз
+        
         verify(cargoCategoryRepository, times(1)).findByParentCategoryId(1L);
         verify(cargoCategoryRepository, times(1)).findByParentCategoryId(2L);
         verify(cargoCategoryRepository, times(1)).findByParentCategoryId(3L);
@@ -352,7 +352,7 @@ class CargoCategoryServiceTests {
 
     @Test
     void createCategory_WithEmptyDescription_ShouldCreateCategory() {
-        // given
+        
         CargoCategoryRequestDTO requestWithEmptyDescription = new CargoCategoryRequestDTO(
                 "Category with empty description", null, null
         );
@@ -373,10 +373,10 @@ class CargoCategoryServiceTests {
         when(cargoCategoryMapper.toResponseDTO(any(CargoCategory.class), any(), any(), anyInt()))
                 .thenReturn(response);
 
-        // when
+        
         CargoCategoryResponseDTO result = cargoCategoryService.createCategory(requestWithEmptyDescription);
 
-        // then
+        
         assertNotNull(result);
         assertNull(result.description());
         verify(cargoCategoryRepository, times(1)).save(category);
