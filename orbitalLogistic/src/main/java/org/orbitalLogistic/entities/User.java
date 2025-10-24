@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table("user")
+@Table("users")
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,14 +27,6 @@ public class User {
     @Size(min = 2, max = 64, message = "Name must be between 2 and 64 characters")
     @Pattern(regexp = "^[a-zA-Zа-яА-Я\\s]+$", message = "Name can only contain letters and spaces")
     private String username;
-
-    @NotBlank
-    @Size(min = 2, max = 100)
-    private String first_name;
-
-    @NotBlank
-    @Size(min = 2, max = 100)
-    private String last_name;
 
     @NotNull
     private Long roleId;

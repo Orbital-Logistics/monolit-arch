@@ -11,6 +11,8 @@ CREATE TYPE assignment_role_enum AS ENUM ('COMMANDER', 'PILOT', 'ENGINEER', 'SCI
 CREATE TYPE maintenance_type_enum AS ENUM ('ROUTINE', 'REPAIR', 'UPGRADE', 'INSPECTION');
 CREATE TYPE maintenance_status_enum AS ENUM ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED');
 CREATE TYPE transaction_type_enum AS ENUM ('LOAD', 'UNLOAD', 'TRANSFER', 'ADJUSTMENT', 'CONSUMPTION');
+CREATE TYPE manifest_status_enum AS ENUM ('PENDING', 'LOADED', 'IN_TRANSIT', 'UNLOADED');
+CREATE TYPE manifest_priority_enum AS ENUM ('LOW', 'NORMAL', 'HIGH', 'CRITICAL');
 
 -- 2. Таблицы
 
@@ -21,16 +23,13 @@ CREATE TABLE role (
     permissions JSON
 );
 
-CREATE TABLE "user" (
+CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(64) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
     role_id BIGINT NOT NULL REFERENCES role(id) ON DELETE RESTRICT,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+    is_active BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE spacecraft_type (
@@ -86,7 +85,7 @@ CREATE TABLE mission (
     mission_type mission_type_enum NOT NULL,
     status mission_status_enum NOT NULL DEFAULT 'PLANNING',
     priority mission_priority_enum NOT NULL DEFAULT 'MEDIUM',
-    commanding_officer_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+    commanding_officer_id BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
     spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE RESTRICT,
     scheduled_departure TIMESTAMP WITHOUT TIME ZONE,
     scheduled_arrival TIMESTAMP WITHOUT TIME ZONE
@@ -97,7 +96,7 @@ CREATE TABLE mission (
 CREATE TABLE mission_assignment (
     id BIGSERIAL PRIMARY KEY,
     mission_id BIGINT NOT NULL REFERENCES mission(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     assigned_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     assignment_role assignment_role_enum NOT NULL,
     responsibility_zone VARCHAR(100)
@@ -110,15 +109,15 @@ CREATE TABLE cargo_storage (
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
     stored_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     last_inventory_check TIMESTAMP WITHOUT TIME ZONE,
-    last_checked_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL
+    last_checked_by_user_id BIGINT REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE TABLE maintenance_log (
     id BIGSERIAL PRIMARY KEY,
     spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE CASCADE,
     maintenance_type maintenance_type_enum NOT NULL,
-    performed_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
-    supervised_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL,
+    performed_by_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    supervised_by_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     start_time TIMESTAMP WITHOUT TIME ZONE,
     end_time TIMESTAMP WITHOUT TIME ZONE,
     status maintenance_status_enum NOT NULL DEFAULT 'SCHEDULED',
@@ -134,10 +133,10 @@ CREATE TABLE cargo_manifest (
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     loaded_at TIMESTAMP WITHOUT TIME ZONE,
     unloaded_at TIMESTAMP WITHOUT TIME ZONE,
-    loaded_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
-    unloaded_by_user_id BIGINT REFERENCES "user"(id) ON DELETE SET NULL,
-    manifest_status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (manifest_status IN ('PENDING', 'LOADED', 'IN_TRANSIT', 'UNLOADED')),
-    priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL' CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'CRITICAL'))
+    loaded_by_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    unloaded_by_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    manifest_status manifest_status_enum NOT NULL DEFAULT 'PENDING',
+    priority manifest_priority_enum NOT NULL DEFAULT 'NORMAL'
 );
 
 CREATE TABLE inventory_transaction (
@@ -149,7 +148,7 @@ CREATE TABLE inventory_transaction (
     to_storage_unit_id BIGINT REFERENCES storage_unit(id) ON DELETE SET NULL,
     from_spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE SET NULL,
     to_spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE SET NULL,
-    performed_by_user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+    performed_by_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     transaction_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     reason_code VARCHAR(50),
     reference_number VARCHAR(100),

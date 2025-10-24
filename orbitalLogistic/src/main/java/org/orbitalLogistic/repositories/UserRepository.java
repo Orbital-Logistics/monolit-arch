@@ -17,7 +17,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Query("""
         SELECT * FROM users\s
         WHERE (:email IS NULL OR email LIKE CONCAT('%', :email, '%'))\s
-        AND (:name IS NULL OR name LIKE CONCAT('%', :name, '%'))
+        AND (:username IS NULL OR username LIKE CONCAT('%', :username, '%'))
         ORDER BY id
         LIMIT :limit OFFSET :offset
        \s""")
@@ -26,7 +26,8 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Query("""
         SELECT COUNT(*) FROM users\s
         WHERE (:email IS NULL OR email LIKE CONCAT('%', :email, '%'))\s
-        AND (:name IS NULL OR name LIKE CONCAT('%', :name, '%'))
+        AND (:username IS NULL OR username LIKE CONCAT('%', :username, '%'))
        \s""")
     long countUsersWithFilters(String email, String name);
+
 }

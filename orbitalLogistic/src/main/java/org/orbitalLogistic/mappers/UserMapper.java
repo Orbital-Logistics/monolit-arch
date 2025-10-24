@@ -14,10 +14,8 @@ import java.util.List;
 public interface UserMapper {
 
     // Entity -> Response DTO
-    @Mapping(target = "role", source = "roleName")
     UserResponseDTO toResponseDTO(
-            User user,
-            String roleName
+            User user
     );
 
     // Request DTO -> Entity
@@ -27,4 +25,4 @@ public interface UserMapper {
     User toEntity(UserRegistrationRequestDTO request);
 
     List<UserResponseDTO> toResponseDTOList(List<User> users);
-}
+}   

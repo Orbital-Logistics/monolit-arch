@@ -6,11 +6,11 @@ INSERT INTO role (name, description, permissions) VALUES
 ('technician', 'Performs maintenance', '{"maintenance": "edit"}');
 
 -- 2. Пользователи
-INSERT INTO "user" (username, email, password_hash, first_name, last_name, role_id, is_active, created_at) VALUES
-('admin_user', 'admin@orbital.log', 'hash123', 'Alex', 'Vance', 1, true, NOW()),
-('logi_officer', 'logi@orbital.log', 'hash456', 'Mira', 'Chen', 2, true, NOW()),
-('cmdr_reyes', 'reyes@orbital.log', 'hash789', 'Dante', 'Reyes', 3, true, NOW()),
-('tech_jones', 'jones@orbital.log', 'hash000', 'Sam', 'Jones', 4, true, NOW());
+INSERT INTO users (username, email, password_hash, role_id, is_active) VALUES
+('admin_user', 'admin@orbital.log', 'hash123' , 1, true),
+('logi_officer', 'logi@orbital.log', 'hash456', 2, true),
+('cmdr_reyes', 'reyes@orbital.log', 'hash789', 3, true),
+('tech_jones', 'jones@orbital.log', 'hash000', 4, true);
 
 -- 3. Типы кораблей
 INSERT INTO spacecraft_type (type_name, classification, max_crew_capacity) VALUES
