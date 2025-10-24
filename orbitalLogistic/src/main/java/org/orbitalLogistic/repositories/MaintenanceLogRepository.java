@@ -31,8 +31,8 @@ public interface MaintenanceLogRepository extends CrudRepository<MaintenanceLog,
     @Query("""
         SELECT ml.* FROM maintenance_log ml
         WHERE (:spacecraftId IS NULL OR ml.spacecraft_id = :spacecraftId)
-        AND (:maintenanceType IS NULL OR ml.maintenance_type = :maintenanceType)
-        AND (:status IS NULL OR ml.status = :status)
+        AND (:maintenanceType IS NULL OR ml.maintenance_type = CAST(:maintenanceType AS maintenance_type_enum))
+        AND (:status IS NULL OR ml.status = CAST(:status AS maintenance_status_enum))
         AND (:performedByUserId IS NULL OR ml.performed_by_user_id = :performedByUserId)
         AND (:supervisedByUserId IS NULL OR ml.supervised_by_user_id = :supervisedByUserId)
         ORDER BY ml.start_time DESC NULLS LAST
@@ -51,8 +51,8 @@ public interface MaintenanceLogRepository extends CrudRepository<MaintenanceLog,
     @Query("""
         SELECT COUNT(*) FROM maintenance_log ml
         WHERE (:spacecraftId IS NULL OR ml.spacecraft_id = :spacecraftId)
-        AND (:maintenanceType IS NULL OR ml.maintenance_type = :maintenanceType)
-        AND (:status IS NULL OR ml.status = :status)
+        AND (:maintenanceType IS NULL OR ml.maintenance_type = CAST(:maintenanceType AS maintenance_type_enum))
+        AND (:status IS NULL OR ml.status = CAST(:status AS maintenance_status_enum))
         AND (:performedByUserId IS NULL OR ml.performed_by_user_id = :performedByUserId)
         AND (:supervisedByUserId IS NULL OR ml.supervised_by_user_id = :supervisedByUserId)
     """)

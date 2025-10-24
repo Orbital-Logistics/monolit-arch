@@ -25,8 +25,12 @@ public class StorageUnitController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        if (size > 50) size = 50;
+
         PageResponseDTO<StorageUnitResponseDTO> response = storageUnitService.getStorageUnits(page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 
     @GetMapping("/{id}")
@@ -56,7 +60,11 @@ public class StorageUnitController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        if (size > 50) size = 50;
+
         PageResponseDTO<CargoStorageResponseDTO> response = storageUnitService.getStorageUnitInventory(id, page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 }

@@ -24,8 +24,12 @@ public class CargoManifestController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        if (size > 50) size = 50;
+
         PageResponseDTO<CargoManifestResponseDTO> response = cargoManifestService.getAllManifests(page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 
     @GetMapping("/cargo-manifests/{id}")
@@ -58,7 +62,11 @@ public class CargoManifestController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        if (size > 50) size = 50;
+
         PageResponseDTO<CargoManifestResponseDTO> response = cargoManifestService.getSpacecraftManifest(id, page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 }

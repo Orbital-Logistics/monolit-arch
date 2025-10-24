@@ -27,7 +27,27 @@ public class SpacecraftController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        if (size > 50) {
+            size = 50;
+        }
+
         PageResponseDTO<SpacecraftResponseDTO> response = spacecraftService.getSpacecrafts(name, status, page, size);
+
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
+    }
+
+    @GetMapping("/scroll")
+    public ResponseEntity<List<SpacecraftResponseDTO>> getSpacecraftsScroll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        if (size > 50) {
+            size = 50;
+        }
+
+        List<SpacecraftResponseDTO> response = spacecraftService.getSpacecraftsScroll(page, size);
         return ResponseEntity.ok(response);
     }
 

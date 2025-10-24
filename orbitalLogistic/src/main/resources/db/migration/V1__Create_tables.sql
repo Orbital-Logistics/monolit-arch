@@ -63,8 +63,9 @@ CREATE TABLE cargo (
     cargo_category_id BIGINT NOT NULL REFERENCES cargo_category(id) ON DELETE RESTRICT,
     mass_per_unit DECIMAL(10,2) NOT NULL,
     volume_per_unit DECIMAL(10,2) NOT NULL,
-    cargo_type cargo_type_enum NOT NULL,
-    hazard_level hazard_level_enum NOT NULL DEFAULT 'NONE'
+    cargo_type cargo_type_enum NOT NULL DEFAULT 'FOOD',
+    hazard_level hazard_level_enum NOT NULL DEFAULT 'NONE',
+    is_active BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE storage_unit (
