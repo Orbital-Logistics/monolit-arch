@@ -13,6 +13,7 @@ import org.orbitalLogistic.mappers.StorageUnitMapper;
 import org.orbitalLogistic.mappers.CargoStorageMapper;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.CargoStorageRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class StorageUnitService {
     private final CargoStorageRepository cargoStorageRepository;
     private final StorageUnitMapper storageUnitMapper;
     private final CargoStorageMapper cargoStorageMapper;
+    private final JdbcTemplate jdbcTemplate; // Добавляем JdbcTemplate
 
     @Transactional(readOnly = true)
     public PageResponseDTO<StorageUnitResponseDTO> getStorageUnits(int page, int size) {
@@ -55,8 +57,24 @@ public class StorageUnitService {
             throw new StorageUnitAlreadyExistsException("Storage unit with code already exists: " + request.unitCode());
         }
 
-        StorageUnit storageUnit = storageUnitMapper.toEntity(request);
-        StorageUnit saved = storageUnitRepository.save(storageUnit);
+        // Используем JdbcTemplate для создания с явным CAST enum
+        String sql = "INSERT INTO storage_unit " +
+                     "(unit_code, location, storage_type, total_mass_capacity, total_volume_capacity, current_mass, current_volume) " +
+                     "VALUES (?, ?, ?::storage_type_enum, ?, ?, 0.00, 0.00) " +
+                     "RETURNING id";
+        
+        Long newId = jdbcTemplate.queryForObject(sql, Long.class,
+                request.unitCode(),
+                request.location(),
+                request.storageType().name(), // Преобразуем enum в string
+                request.totalMassCapacity(),
+                request.totalVolumeCapacity()
+        );
+
+        // Получаем созданную запись
+        StorageUnit saved = storageUnitRepository.findById(newId)
+                .orElseThrow(() -> new StorageUnitNotFoundException("Failed to create storage unit"));
+
         return toResponseDTO(saved);
     }
 
@@ -69,14 +87,36 @@ public class StorageUnitService {
             throw new StorageUnitAlreadyExistsException("Storage unit with code already exists: " + request.unitCode());
         }
 
+        // Используем JdbcTemplate для обновления с явным CAST enum
+        String sql = "UPDATE storage_unit SET " +
+                     "unit_code = ?, " +
+                     "location = ?, " +
+                     "storage_type = ?::storage_type_enum, " + // Явное приведение типа
+                     "total_mass_capacity = ?, " +
+                     "total_volume_capacity = ?, " +
+                     "current_mass = ?, " +
+                     "current_volume = ? " +
+                     "WHERE id = ?";
+        
+        jdbcTemplate.update(sql,
+                request.unitCode(),
+                request.location(),
+                request.storageType().name(), // Преобразуем enum в string
+                request.totalMassCapacity(),
+                request.totalVolumeCapacity(),
+                storageUnit.getCurrentMass(),
+                storageUnit.getCurrentVolume(),
+                id
+        );
+
+        // Обновляем объект для возврата
         storageUnit.setUnitCode(request.unitCode());
         storageUnit.setLocation(request.location());
         storageUnit.setStorageType(request.storageType());
         storageUnit.setTotalMassCapacity(request.totalMassCapacity());
         storageUnit.setTotalVolumeCapacity(request.totalVolumeCapacity());
 
-        StorageUnit updated = storageUnitRepository.save(storageUnit);
-        return toResponseDTO(updated);
+        return toResponseDTO(storageUnit);
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +149,36 @@ public class StorageUnitService {
             page == 0,
             page >= totalPages - 1
         );
+    }
+
+    // Дополнительные методы для работы с inventory
+
+    public void updateStorageUnitCapacity(Long storageUnitId) {
+        String sql = "UPDATE storage_unit su " +
+                     "SET current_mass = ( " +
+                     "    SELECT COALESCE(SUM(cs.quantity * c.mass_per_unit), 0.00) " +
+                     "    FROM cargo_storage cs " +
+                     "    JOIN cargo c ON cs.cargo_id = c.id " +
+                     "    WHERE cs.storage_unit_id = su.id " +
+                     "), " +
+                     "current_volume = ( " +
+                     "    SELECT COALESCE(SUM(cs.quantity * c.volume_per_unit), 0.00) " +
+                     "    FROM cargo_storage cs " +
+                     "    JOIN cargo c ON cs.cargo_id = c.id " +
+                     "    WHERE cs.storage_unit_id = su.id " +
+                     ") " +
+                     "WHERE su.id = ?";
+        
+        jdbcTemplate.update(sql, storageUnitId);
+    }
+
+    public boolean hasAvailableCapacity(Long storageUnitId, BigDecimal requiredMass, BigDecimal requiredVolume) {
+        String sql = "SELECT " +
+                     "(total_mass_capacity - current_mass) >= ? AND " +
+                     "(total_volume_capacity - current_volume) >= ? " +
+                     "FROM storage_unit WHERE id = ?";
+        
+        return jdbcTemplate.queryForObject(sql, Boolean.class, requiredMass, requiredVolume, storageUnitId);
     }
 
     private StorageUnitResponseDTO toResponseDTO(StorageUnit storageUnit) {
