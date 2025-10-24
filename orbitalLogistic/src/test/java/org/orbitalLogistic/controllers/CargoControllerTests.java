@@ -59,14 +59,14 @@ class CargoControllerTests {
 
     @Test
     void getAllCargos_WithValidParameters_ShouldReturnList() {
-        
+
         List<CargoResponseDTO> cargos = List.of(testCargoResponse);
         when(cargoService.getCargosScroll(0, 20)).thenReturn(cargos);
 
-        
+
         ResponseEntity<List<CargoResponseDTO>> response = cargoController.getAllCargos(0, 20);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -77,14 +77,14 @@ class CargoControllerTests {
 
     @Test
     void getAllCargos_WithDefaultParameters_ShouldUseDefaults() {
-        
+
         List<CargoResponseDTO> cargos = List.of(testCargoResponse);
         when(cargoService.getCargosScroll(0, 20)).thenReturn(cargos);
 
-        
+
         ResponseEntity<List<CargoResponseDTO>> response = cargoController.getAllCargos(0, 20);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(cargoService, times(1)).getCargosScroll(0, 20);
@@ -92,16 +92,16 @@ class CargoControllerTests {
 
     @Test
     void getAllCargosPaged_WithValidFilters_ShouldReturnPageResponse() {
-        
+
         when(cargoService.getCargosPaged("Scientific", "SCIENTIFIC", "LOW", 0, 20))
                 .thenReturn(testPageResponse);
 
-        
+
         ResponseEntity<PageResponseDTO<CargoResponseDTO>> response = cargoController.getAllCargosPaged(
                 "Scientific", "SCIENTIFIC", "LOW", 0, 20
         );
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -111,16 +111,16 @@ class CargoControllerTests {
 
     @Test
     void getAllCargosPaged_WithNullFilters_ShouldReturnAllCargos() {
-        
+
         when(cargoService.getCargosPaged(null, null, null, 0, 20))
                 .thenReturn(testPageResponse);
 
-        
+
         ResponseEntity<PageResponseDTO<CargoResponseDTO>> response = cargoController.getAllCargosPaged(
                 null, null, null, 0, 20
         );
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(cargoService, times(1)).getCargosPaged(null, null, null, 0, 20);
@@ -128,13 +128,13 @@ class CargoControllerTests {
 
     @Test
     void getCargoById_WithValidId_ShouldReturnCargo() {
-        
+
         when(cargoService.getCargoById(1L)).thenReturn(testCargoResponse);
 
-        
+
         ResponseEntity<CargoResponseDTO> response = cargoController.getCargoById(1L);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -145,11 +145,11 @@ class CargoControllerTests {
 
     @Test
     void getCargoById_WithInvalidId_ShouldPropagateException() {
-        
+
         when(cargoService.getCargoById(999L))
                 .thenThrow(new CargoNotFoundException("Cargo not found with id: 999"));
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoController.getCargoById(999L)
@@ -161,13 +161,13 @@ class CargoControllerTests {
 
     @Test
     void createCargo_WithValidRequest_ShouldReturnCreatedResponse() {
-        
+
         when(cargoService.createCargo(testCargoRequest)).thenReturn(testCargoResponse);
 
-        
+
         ResponseEntity<CargoResponseDTO> response = cargoController.createCargo(testCargoRequest);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -177,11 +177,11 @@ class CargoControllerTests {
 
     @Test
     void createCargo_WithExistingName_ShouldPropagateException() {
-        
+
         when(cargoService.createCargo(testCargoRequest))
                 .thenThrow(new CargoAlreadyExistsException("Cargo with name already exists: Scientific Equipment"));
 
-        
+
         CargoAlreadyExistsException exception = assertThrows(
                 CargoAlreadyExistsException.class,
                 () -> cargoController.createCargo(testCargoRequest)
@@ -193,11 +193,11 @@ class CargoControllerTests {
 
     @Test
     void createCargo_WithInvalidCategory_ShouldPropagateException() {
-        
+
         when(cargoService.createCargo(testCargoRequest))
                 .thenThrow(new DataNotFoundException("Cargo category not found"));
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoController.createCargo(testCargoRequest)
@@ -209,7 +209,7 @@ class CargoControllerTests {
 
     @Test
     void updateCargo_WithValidId_ShouldReturnUpdatedCargo() {
-        
+
         CargoResponseDTO updatedCargo = new CargoResponseDTO(
                 1L, "Updated Equipment", "Electronics",
                 BigDecimal.valueOf(15.0), BigDecimal.valueOf(7.0),
@@ -217,10 +217,10 @@ class CargoControllerTests {
         );
         when(cargoService.updateCargo(1L, testCargoRequest)).thenReturn(updatedCargo);
 
-        
+
         ResponseEntity<CargoResponseDTO> response = cargoController.updateCargo(1L, testCargoRequest);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -230,11 +230,11 @@ class CargoControllerTests {
 
     @Test
     void updateCargo_WithInvalidId_ShouldPropagateException() {
-        
+
         when(cargoService.updateCargo(999L, testCargoRequest))
                 .thenThrow(new CargoNotFoundException("Cargo not found with id: 999"));
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoController.updateCargo(999L, testCargoRequest)
@@ -246,11 +246,11 @@ class CargoControllerTests {
 
     @Test
     void updateCargo_WithExistingName_ShouldPropagateException() {
-        
+
         when(cargoService.updateCargo(1L, testCargoRequest))
                 .thenThrow(new CargoAlreadyExistsException("Cargo with name already exists: Scientific Equipment"));
 
-        
+
         CargoAlreadyExistsException exception = assertThrows(
                 CargoAlreadyExistsException.class,
                 () -> cargoController.updateCargo(1L, testCargoRequest)
@@ -262,13 +262,13 @@ class CargoControllerTests {
 
     @Test
     void deleteCargo_WithValidId_ShouldReturnNoContent() {
-        
+
         doNothing().when(cargoService).deleteCargo(1L);
 
-        
+
         ResponseEntity<Void> response = cargoController.deleteCargo(1L);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         assertNull(response.getBody());
@@ -277,11 +277,11 @@ class CargoControllerTests {
 
     @Test
     void deleteCargo_WithInvalidId_ShouldPropagateException() {
-        
+
         doThrow(new CargoNotFoundException("Cargo not found with id: 999"))
                 .when(cargoService).deleteCargo(999L);
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoController.deleteCargo(999L)
@@ -293,16 +293,16 @@ class CargoControllerTests {
 
     @Test
     void searchCargos_WithValidFilters_ShouldReturnPageResponse() {
-        
+
         when(cargoService.searchCargos("Scientific", "SCIENTIFIC", "LOW", 0, 20))
                 .thenReturn(testPageResponse);
 
-        
+
         ResponseEntity<PageResponseDTO<CargoResponseDTO>> response = cargoController.searchCargos(
                 "Scientific", "SCIENTIFIC", "LOW", 0, 20
         );
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -312,16 +312,16 @@ class CargoControllerTests {
 
     @Test
     void searchCargos_WithNullFilters_ShouldReturnAllCargos() {
-        
+
         when(cargoService.searchCargos(null, null, null, 0, 20))
                 .thenReturn(testPageResponse);
 
-        
+
         ResponseEntity<PageResponseDTO<CargoResponseDTO>> response = cargoController.searchCargos(
                 null, null, null, 0, 20
         );
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(cargoService, times(1)).searchCargos(null, null, null, 0, 20);
@@ -329,11 +329,11 @@ class CargoControllerTests {
 
     @Test
     void createCargo_WithNullRequest_ShouldPropagateException() {
-        
+
         when(cargoService.createCargo(null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> cargoController.createCargo(null)
@@ -345,11 +345,11 @@ class CargoControllerTests {
 
     @Test
     void updateCargo_WithNullRequest_ShouldPropagateException() {
-        
+
         when(cargoService.updateCargo(1L, null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> cargoController.updateCargo(1L, null)

@@ -35,14 +35,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleUserNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         UserNotFoundException exception = new UserNotFoundException("User not found with id: 1");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleUserNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -54,14 +54,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleStorageUnitNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         StorageUnitNotFoundException exception = new StorageUnitNotFoundException("Storage unit not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleStorageUnitNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Storage unit not found", response.getBody().message());
@@ -69,14 +69,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleSpacecraftNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         SpacecraftNotFoundException exception = new SpacecraftNotFoundException("Spacecraft not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleSpacecraftNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Spacecraft not found", response.getBody().message());
@@ -84,14 +84,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleCargoCategoryNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         CargoCategoryNotFoundException exception = new CargoCategoryNotFoundException("Cargo category not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleCargoCategoryNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Cargo category not found", response.getBody().message());
@@ -99,14 +99,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleCargoManifestNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         CargoManifestNotFoundException exception = new CargoManifestNotFoundException("Cargo manifest not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleCargoManifestNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Cargo manifest not found", response.getBody().message());
@@ -114,14 +114,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleMissionNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         MissionNotFoundException exception = new MissionNotFoundException("Mission not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleMissionNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Mission not found", response.getBody().message());
@@ -129,14 +129,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleInventoryTransactionNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         InventoryTransactionNotFoundException exception = new InventoryTransactionNotFoundException("Transaction not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleInventoryTransactionNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Transaction not found", response.getBody().message());
@@ -144,14 +144,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleUserAlreadyExistsException_ShouldReturnConflictResponse() {
-        // Given
+
         UserAlreadyExistsException exception = new UserAlreadyExistsException("User already exists");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleUserAlreadyExistsException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -162,14 +162,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleMissionAlreadyExistsException_ShouldReturnConflictResponse() {
-        // Given
+
         MissionAlreadyExistsException exception = new MissionAlreadyExistsException("Mission already exists");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleMissionAlreadyExistsException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals("Mission already exists", response.getBody().message());
@@ -177,14 +177,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleStorageUnitAlreadyExistsException_ShouldReturnConflictResponse() {
-        // Given
+
         StorageUnitAlreadyExistsException exception = new StorageUnitAlreadyExistsException("Storage unit already exists");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleStorageUnitAlreadyExistsException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals("Storage unit already exists", response.getBody().message());
@@ -204,14 +204,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleDataNotFoundException_ShouldReturnNotFoundResponse() {
-        // Given
+
         DataNotFoundException exception = new DataNotFoundException("Data not found");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleDataNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Data not found", response.getBody().message());
@@ -219,7 +219,7 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleValidationExceptions_ShouldReturnBadRequestWithDetails() {
-        // Given
+
         MethodArgumentNotValidException exception = mock(MethodArgumentNotValidException.class);
         BindingResult bindingResult = mock(BindingResult.class);
         FieldError fieldError1 = new FieldError("object", "email", "Email must be valid");
@@ -228,11 +228,11 @@ class GlobalExceptionHandlerTests {
         when(exception.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getAllErrors()).thenReturn(Arrays.asList(fieldError1, fieldError2));
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ValidationErrorResponse> response =
                 exceptionHandler.handleValidationExceptions(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -249,18 +249,18 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleValidationExceptions_WithEmptyErrors_ShouldReturnBadRequest() {
-        // Given
+
         MethodArgumentNotValidException exception = mock(MethodArgumentNotValidException.class);
         BindingResult bindingResult = mock(BindingResult.class);
 
         when(exception.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getAllErrors()).thenReturn(Arrays.asList());
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ValidationErrorResponse> response =
                 exceptionHandler.handleValidationExceptions(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody().details());
@@ -269,14 +269,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleAllUncaughtException_ShouldReturnInternalServerError() {
-        // Given
+
         Exception exception = new RuntimeException("Unexpected error");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleAllUncaughtException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -287,14 +287,14 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleAllUncaughtException_WithNullPointerException_ShouldReturnInternalServerError() {
-        // Given
+
         NullPointerException exception = new NullPointerException("Null pointer");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleAllUncaughtException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("An unexpected error occurred", response.getBody().message());
@@ -302,12 +302,12 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void errorResponseRecord_ShouldHaveCorrectStructure() {
-        // Given
+
         LocalDateTime timestamp = LocalDateTime.now();
         GlobalExceptionHandler.ErrorResponse errorResponse =
                 new GlobalExceptionHandler.ErrorResponse(timestamp, 404, "Not Found", "Resource not found");
 
-        // Then
+
         assertEquals(timestamp, errorResponse.timestamp());
         assertEquals(404, errorResponse.status());
         assertEquals("Not Found", errorResponse.error());
@@ -316,7 +316,7 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void validationErrorResponseRecord_ShouldHaveCorrectStructure() {
-        // Given
+
         LocalDateTime timestamp = LocalDateTime.now();
         Map<String, String> details = new HashMap<>();
         details.put("field", "error message");
@@ -325,7 +325,7 @@ class GlobalExceptionHandlerTests {
                 new GlobalExceptionHandler.ValidationErrorResponse(
                         timestamp, 400, "Bad Request", "Validation failed", details);
 
-        // Then
+
         assertEquals(timestamp, validationErrorResponse.timestamp());
         assertEquals(400, validationErrorResponse.status());
         assertEquals("Bad Request", validationErrorResponse.error());
@@ -335,21 +335,21 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleIllegalArgumentException_ShouldReturnInternalServerError() {
-        // Given
+
         IllegalArgumentException exception = new IllegalArgumentException("Invalid argument");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleAllUncaughtException(exception);
 
-        // Then
+
         assertNotNull(response);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     void handleDifferentNotFoundExceptions_ShouldAllReturn404() {
-        // Test various NotFound exceptions
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> userNotFoundResponse =
                 exceptionHandler.handleUserNotFoundException(new UserNotFoundException("User not found"));
         assertEquals(HttpStatus.NOT_FOUND, userNotFoundResponse.getStatusCode());
@@ -365,7 +365,7 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void handleDifferentConflictExceptions_ShouldAllReturn409() {
-        // Test various Conflict exceptions
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> userConflictResponse =
                 exceptionHandler.handleUserAlreadyExistsException(new UserAlreadyExistsException("User exists"));
         assertEquals(HttpStatus.CONFLICT, userConflictResponse.getStatusCode());
@@ -381,16 +381,16 @@ class GlobalExceptionHandlerTests {
 
     @Test
     void errorResponseTimestamps_ShouldBeRecent() {
-        // Given
+
         UserNotFoundException exception = new UserNotFoundException("Test");
 
-        // When
+
         ResponseEntity<GlobalExceptionHandler.ErrorResponse> response =
                 exceptionHandler.handleUserNotFoundException(exception);
 
-        // Then
+
         assertNotNull(response.getBody().timestamp());
-        // Timestamp should be close to current time (within 1 second)
+
         assertTrue(LocalDateTime.now().minusSeconds(1).isBefore(response.getBody().timestamp()));
     }
 }

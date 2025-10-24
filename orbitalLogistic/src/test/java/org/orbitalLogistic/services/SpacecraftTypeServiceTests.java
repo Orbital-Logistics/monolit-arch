@@ -43,29 +43,29 @@ class SpacecraftTypeServiceTests {
                 .id(1L)
                 .typeName("Cargo Ship")
                 .classification(SpacecraftClassification.CARGO_HAULER)
-                .maxCrewCapacity(10) 
+                .maxCrewCapacity(10)
                 .build();
 
         testResponseDTO = new SpacecraftTypeResponseDTO(
-                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 
+                1L, "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10
         );
 
         testRequestDTO = new SpacecraftTypeRequestDTO(
-                "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10 
+                "Cargo Ship", SpacecraftClassification.CARGO_HAULER, 10
         );
     }
 
     @Test
     void getAllSpacecraftTypes_ShouldReturnListOfTypes() {
-        
+
         List<SpacecraftType> types = List.of(testSpacecraftType);
         when(spacecraftTypeRepository.findAll()).thenReturn(types);
         when(spacecraftTypeMapper.toResponseDTO(testSpacecraftType)).thenReturn(testResponseDTO);
 
-        
+
         List<SpacecraftTypeResponseDTO> result = spacecraftTypeService.getAllSpacecraftTypes();
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Cargo Ship", result.get(0).typeName());
@@ -76,13 +76,13 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void getAllSpacecraftTypes_WhenNoTypes_ShouldReturnEmptyList() {
-        
+
         when(spacecraftTypeRepository.findAll()).thenReturn(List.of());
 
-        
+
         List<SpacecraftTypeResponseDTO> result = spacecraftTypeService.getAllSpacecraftTypes();
 
-        
+
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(spacecraftTypeRepository, times(1)).findAll();
@@ -91,7 +91,7 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void getAllSpacecraftTypes_WithMultipleTypes_ShouldReturnAllTypes() {
-        
+
         SpacecraftType type1 = SpacecraftType.builder()
                 .id(1L)
                 .typeName("Cargo Ship")
@@ -119,10 +119,10 @@ class SpacecraftTypeServiceTests {
         when(spacecraftTypeMapper.toResponseDTO(type1)).thenReturn(response1);
         when(spacecraftTypeMapper.toResponseDTO(type2)).thenReturn(response2);
 
-        
+
         List<SpacecraftTypeResponseDTO> result = spacecraftTypeService.getAllSpacecraftTypes();
 
-        
+
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("Cargo Ship", result.get(0).typeName());
@@ -134,14 +134,14 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void getSpacecraftTypeById_WithValidId_ShouldReturnType() {
-        
+
         when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
         when(spacecraftTypeMapper.toResponseDTO(testSpacecraftType)).thenReturn(testResponseDTO);
 
-        
+
         SpacecraftTypeResponseDTO result = spacecraftTypeService.getSpacecraftTypeById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Cargo Ship", result.typeName());
@@ -152,10 +152,10 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void getSpacecraftTypeById_WithInvalidId_ShouldThrowException() {
-        
+
         when(spacecraftTypeRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         SpacecraftTypeNotFoundException exception = assertThrows(
                 SpacecraftTypeNotFoundException.class,
                 () -> spacecraftTypeService.getSpacecraftTypeById(999L)
@@ -168,7 +168,7 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void createSpacecraftType_WithValidRequest_ShouldCreateType() {
-        
+
         SpacecraftType newType = SpacecraftType.builder()
                 .typeName("Cargo Ship")
                 .classification(SpacecraftClassification.CARGO_HAULER)
@@ -179,10 +179,10 @@ class SpacecraftTypeServiceTests {
         when(spacecraftTypeRepository.save(newType)).thenReturn(testSpacecraftType);
         when(spacecraftTypeMapper.toResponseDTO(testSpacecraftType)).thenReturn(testResponseDTO);
 
-        
+
         SpacecraftTypeResponseDTO result = spacecraftTypeService.createSpacecraftType(testRequestDTO);
 
-        
+
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Cargo Ship", result.typeName());
@@ -194,11 +194,11 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void createSpacecraftType_WithNullRequest_ShouldPropagateException() {
-        
+
         when(spacecraftTypeMapper.toEntity(null))
                 .thenThrow(new IllegalArgumentException("Request cannot be null"));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> spacecraftTypeService.createSpacecraftType(null)
@@ -211,7 +211,7 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void createSpacecraftType_WithMinimalData_ShouldCreateType() {
-        
+
         SpacecraftTypeRequestDTO minimalRequest = new SpacecraftTypeRequestDTO(
                 "Minimal Ship", SpacecraftClassification.CARGO_HAULER, 5
         );
@@ -230,10 +230,10 @@ class SpacecraftTypeServiceTests {
         when(spacecraftTypeRepository.save(minimalType)).thenReturn(testSpacecraftType);
         when(spacecraftTypeMapper.toResponseDTO(testSpacecraftType)).thenReturn(minimalResponse);
 
-        
+
         SpacecraftTypeResponseDTO result = spacecraftTypeService.createSpacecraftType(minimalRequest);
 
-        
+
         assertNotNull(result);
         assertEquals("Minimal Ship", result.typeName());
         verify(spacecraftTypeMapper, times(1)).toEntity(minimalRequest);
@@ -242,7 +242,7 @@ class SpacecraftTypeServiceTests {
 
     @Test
     void createSpacecraftType_WithAllFields_ShouldCreateType() {
-        
+
         SpacecraftTypeRequestDTO fullRequest = new SpacecraftTypeRequestDTO(
                 "Full Ship", SpacecraftClassification.PERSONNEL_TRANSPORT, 20
         );
@@ -261,26 +261,26 @@ class SpacecraftTypeServiceTests {
         when(spacecraftTypeRepository.save(fullType)).thenReturn(testSpacecraftType);
         when(spacecraftTypeMapper.toResponseDTO(testSpacecraftType)).thenReturn(fullResponse);
 
-        
+
         SpacecraftTypeResponseDTO result = spacecraftTypeService.createSpacecraftType(fullRequest);
 
-        
+
         assertNotNull(result);
         assertEquals("Full Ship", result.typeName());
         assertEquals(SpacecraftClassification.PERSONNEL_TRANSPORT, result.classification());
-        assertEquals(20, result.maxCrewCapacity()); 
+        assertEquals(20, result.maxCrewCapacity());
         verify(spacecraftTypeMapper, times(1)).toEntity(fullRequest);
         verify(spacecraftTypeRepository, times(1)).save(fullType);
     }
 
     @Test
     void createSpacecraftType_WithRepositoryException_ShouldPropagateException() {
-        
+
         when(spacecraftTypeMapper.toEntity(testRequestDTO)).thenReturn(testSpacecraftType);
         when(spacecraftTypeRepository.save(testSpacecraftType))
                 .thenThrow(new RuntimeException("Database error"));
 
-        
+
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> spacecraftTypeService.createSpacecraftType(testRequestDTO)

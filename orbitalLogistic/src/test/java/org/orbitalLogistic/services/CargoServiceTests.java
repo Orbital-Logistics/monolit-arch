@@ -85,17 +85,17 @@ class CargoServiceTests {
 
     @Test
     void getCargosScroll_WithValidParameters_ShouldReturnList() {
-        
+
         List<Cargo> cargos = List.of(testCargo);
         when(cargoRepository.findWithFilters(null, null, null, 21, 0)).thenReturn(cargos);
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         List<CargoResponseDTO> result = cargoService.getCargosScroll(0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Scientific Equipment", result.get(0).name());
@@ -104,7 +104,7 @@ class CargoServiceTests {
 
     @Test
     void getCargosScroll_WithMoreResultsThanSize_ShouldLimitResults() {
-        
+
         Cargo cargo2 = Cargo.builder()
                 .id(2L)
                 .name("Equipment 2")
@@ -117,25 +117,25 @@ class CargoServiceTests {
 
         List<Cargo> cargos = List.of(testCargo, cargo2);
 
-        
+
         when(cargoRepository.findWithFilters(isNull(), isNull(), isNull(), eq(2), eq(0)))
                 .thenReturn(cargos);
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         List<CargoResponseDTO> result = cargoService.getCargosScroll(0, 1);
 
-        
+
         assertNotNull(result);
-        assertEquals(1, result.size()); 
+        assertEquals(1, result.size());
         verify(cargoRepository, times(1)).findWithFilters(null, null, null, 2, 0);
     }
 
     @Test
     void getCargosPaged_WithValidFilters_ShouldReturnPageResponse() {
-        
+
         List<Cargo> cargos = List.of(testCargo);
         when(cargoRepository.findWithFilters("Scientific", "SCIENTIFIC", "LOW", 20, 0))
                 .thenReturn(cargos);
@@ -145,10 +145,10 @@ class CargoServiceTests {
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<CargoResponseDTO> result = cargoService.getCargosPaged("Scientific", "SCIENTIFIC", "LOW", 0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -163,7 +163,7 @@ class CargoServiceTests {
 
     @Test
     void getCargosPaged_WithNullFilters_ShouldReturnAllCargos() {
-        
+
         List<Cargo> cargos = List.of(testCargo);
         when(cargoRepository.findWithFilters(null, null, null, 20, 0))
                 .thenReturn(cargos);
@@ -173,10 +173,10 @@ class CargoServiceTests {
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<CargoResponseDTO> result = cargoService.getCargosPaged(null, null, null, 0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         verify(cargoRepository, times(1)).findWithFilters(null, null, null, 20, 0);
@@ -184,16 +184,16 @@ class CargoServiceTests {
 
     @Test
     void getCargoById_WithValidId_ShouldReturnCargo() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoResponseDTO result = cargoService.getCargoById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Scientific Equipment", result.name());
@@ -202,10 +202,10 @@ class CargoServiceTests {
 
     @Test
     void getCargoById_WithInvalidId_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoService.getCargoById(999L)
@@ -217,7 +217,7 @@ class CargoServiceTests {
 
     @Test
     void createCargo_WithValidRequest_ShouldCreateCargo() {
-        
+
         Cargo newCargo = Cargo.builder()
                 .name("Scientific Equipment")
                 .cargoCategoryId(1L)
@@ -228,21 +228,21 @@ class CargoServiceTests {
                 .build();
 
         when(cargoRepository.existsByName("Scientific Equipment")).thenReturn(false);
-        
+
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoMapper.toEntity(testRequestDTO)).thenReturn(newCargo);
         when(cargoRepository.save(newCargo)).thenReturn(testCargo);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoResponseDTO result = cargoService.createCargo(testRequestDTO);
 
-        
+
         assertNotNull(result);
         assertEquals("Scientific Equipment", result.name());
         verify(cargoRepository, times(1)).existsByName("Scientific Equipment");
-        
+
         verify(cargoCategoryRepository, times(2)).findById(1L);
         verify(cargoMapper, times(1)).toEntity(testRequestDTO);
         verify(cargoRepository, times(1)).save(newCargo);
@@ -250,10 +250,10 @@ class CargoServiceTests {
 
     @Test
     void createCargo_WithExistingName_ShouldThrowException() {
-        
+
         when(cargoRepository.existsByName("Scientific Equipment")).thenReturn(true);
 
-        
+
         CargoAlreadyExistsException exception = assertThrows(
                 CargoAlreadyExistsException.class,
                 () -> cargoService.createCargo(testRequestDTO)
@@ -266,7 +266,7 @@ class CargoServiceTests {
 
     @Test
     void createCargo_WithInvalidCategoryId_ShouldThrowException() {
-        
+
         when(cargoRepository.existsByName("Scientific Equipment")).thenReturn(false);
         when(cargoCategoryRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -276,7 +276,7 @@ class CargoServiceTests {
                 CargoType.SCIENTIFIC, HazardLevel.LOW
         );
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoService.createCargo(requestWithInvalidCategory)
@@ -289,7 +289,7 @@ class CargoServiceTests {
 
     @Test
     void updateCargo_WithValidId_ShouldUpdateCargo() {
-        
+
         CargoRequestDTO updateRequest = new CargoRequestDTO(
                 "Updated Equipment", 1L,
                 BigDecimal.valueOf(15.0), BigDecimal.valueOf(7.0),
@@ -303,10 +303,10 @@ class CargoServiceTests {
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoResponseDTO result = cargoService.updateCargo(1L, updateRequest);
 
-        
+
         assertNotNull(result);
         verify(cargoRepository, times(1)).findById(1L);
         verify(cargoRepository, times(1)).existsByName("Updated Equipment");
@@ -315,10 +315,10 @@ class CargoServiceTests {
 
     @Test
     void updateCargo_WithInvalidId_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoService.updateCargo(999L, testRequestDTO)
@@ -331,7 +331,7 @@ class CargoServiceTests {
 
     @Test
     void updateCargo_WithExistingName_ShouldThrowException() {
-        
+
         CargoRequestDTO updateRequest = new CargoRequestDTO(
                 "Existing Name", 1L,
                 BigDecimal.valueOf(10.5), BigDecimal.valueOf(5.0),
@@ -341,7 +341,7 @@ class CargoServiceTests {
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(cargoRepository.existsByName("Existing Name")).thenReturn(true);
 
-        
+
         CargoAlreadyExistsException exception = assertThrows(
                 CargoAlreadyExistsException.class,
                 () -> cargoService.updateCargo(1L, updateRequest)
@@ -354,7 +354,7 @@ class CargoServiceTests {
 
     @Test
     void updateCargo_WithSameName_ShouldNotThrowException() {
-        
+
         CargoRequestDTO updateRequest = new CargoRequestDTO(
                 "Scientific Equipment", 1L,
                 BigDecimal.valueOf(15.0), BigDecimal.valueOf(7.0),
@@ -367,10 +367,10 @@ class CargoServiceTests {
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoResponseDTO result = cargoService.updateCargo(1L, updateRequest);
 
-        
+
         assertNotNull(result);
         verify(cargoRepository, never()).existsByName(anyString());
         verify(cargoRepository, times(1)).save(any(Cargo.class));
@@ -378,26 +378,26 @@ class CargoServiceTests {
 
     @Test
     void deleteCargo_WithValidId_ShouldDeleteCargo() {
-        // Given
+
         when(cargoRepository.existsById(1L)).thenReturn(true);
-        when(cargoManifestRepository.existsByCargoId(1L)).thenReturn(false); // Добавлена проверка
+        when(cargoManifestRepository.existsByCargoId(1L)).thenReturn(false);
         doNothing().when(cargoRepository).deleteById(1L);
 
-        // When
+
         cargoService.deleteCargo(1L);
 
-        // Then
+
         verify(cargoRepository, times(1)).existsById(1L);
-        verify(cargoManifestRepository, times(1)).existsByCargoId(1L); // Проверка вызова
+        verify(cargoManifestRepository, times(1)).existsByCargoId(1L);
         verify(cargoRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void deleteCargo_WithInvalidId_ShouldThrowException() {
-        
+
         when(cargoRepository.existsById(999L)).thenReturn(false);
 
-        
+
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
                 () -> cargoService.deleteCargo(999L)
@@ -410,7 +410,7 @@ class CargoServiceTests {
 
     @Test
     void searchCargos_ShouldCallGetCargosPaged() {
-        
+
         List<Cargo> cargos = List.of(testCargo);
         when(cargoRepository.findWithFilters("test", "SCIENTIFIC", "LOW", 20, 0))
                 .thenReturn(cargos);
@@ -420,10 +420,10 @@ class CargoServiceTests {
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<CargoResponseDTO> result = cargoService.searchCargos("test", "SCIENTIFIC", "LOW", 0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         verify(cargoRepository, times(1)).findWithFilters("test", "SCIENTIFIC", "LOW", 20, 0);
@@ -431,16 +431,16 @@ class CargoServiceTests {
 
     @Test
     void toResponseDTO_WithValidCargo_ShouldReturnResponseDTO() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoResponseDTO result = cargoService.getCargoById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals("Electronics", result.cargoCategoryName());
         verify(cargoCategoryRepository, times(1)).findById(1L);
@@ -448,11 +448,11 @@ class CargoServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidCategory_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.empty());
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoService.getCargoById(1L)

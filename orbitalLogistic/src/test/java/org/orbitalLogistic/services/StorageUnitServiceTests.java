@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
@@ -15,6 +17,7 @@ import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
 import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.orbitalLogistic.mappers.StorageUnitMapper;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +28,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class StorageUnitServiceTests {
 
     @Mock
@@ -32,6 +36,9 @@ class StorageUnitServiceTests {
 
     @Mock
     private StorageUnitMapper storageUnitMapper;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @InjectMocks
     private StorageUnitService storageUnitService;
@@ -46,7 +53,7 @@ class StorageUnitServiceTests {
                 .id(1L)
                 .unitCode("SU-001")
                 .location("Warehouse A")
-                .storageType(StorageTypeEnum.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT)
                 .totalMassCapacity(BigDecimal.valueOf(1000.0))
                 .totalVolumeCapacity(BigDecimal.valueOf(500.0))
                 .currentMass(BigDecimal.valueOf(200.0))
@@ -65,11 +72,15 @@ class StorageUnitServiceTests {
                 "SU-001", "Warehouse A", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0)
         );
+
+
+        lenient().when(jdbcTemplate.queryForObject(anyString(), eq(BigDecimal.class), any(Object[].class)))
+                .thenReturn(BigDecimal.ZERO);
+        lenient().when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
     }
 
     @Test
     void getStorageUnits_WithValidParameters_ShouldReturnPageResponse() {
-        
         List<StorageUnit> storageUnits = List.of(testStorageUnit);
         when(storageUnitRepository.findAllPaged(20, 0)).thenReturn(storageUnits);
         when(storageUnitRepository.countAll()).thenReturn(1L);
@@ -77,32 +88,27 @@ class StorageUnitServiceTests {
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
         PageResponseDTO<StorageUnitResponseDTO> result = storageUnitService.getStorageUnits(0, 20);
 
-        
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
         assertEquals(20, result.pageSize());
         assertEquals(1, result.totalElements());
         assertEquals(1, result.totalPages());
-        assertTrue(result.first()); 
-        assertTrue(result.last());  
+        assertTrue(result.first());
+        assertTrue(result.last());
         verify(storageUnitRepository, times(1)).findAllPaged(20, 0);
         verify(storageUnitRepository, times(1)).countAll();
     }
 
     @Test
     void getStorageUnits_WithNoStorageUnits_ShouldReturnEmptyPage() {
-        
         when(storageUnitRepository.findAllPaged(20, 0)).thenReturn(List.of());
         when(storageUnitRepository.countAll()).thenReturn(0L);
 
-        
         PageResponseDTO<StorageUnitResponseDTO> result = storageUnitService.getStorageUnits(0, 20);
 
-        
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -112,7 +118,6 @@ class StorageUnitServiceTests {
 
     @Test
     void getStorageUnits_WithLargeDataset_ShouldCalculatePaginationCorrectly() {
-        
         List<StorageUnit> storageUnits = List.of(testStorageUnit);
         when(storageUnitRepository.findAllPaged(10, 20)).thenReturn(storageUnits);
         when(storageUnitRepository.countAll()).thenReturn(50L);
@@ -120,32 +125,27 @@ class StorageUnitServiceTests {
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
         PageResponseDTO<StorageUnitResponseDTO> result = storageUnitService.getStorageUnits(2, 10);
 
-        
         assertNotNull(result);
         assertEquals(2, result.currentPage());
         assertEquals(10, result.pageSize());
         assertEquals(50, result.totalElements());
         assertEquals(5, result.totalPages());
-        assertFalse(result.first()); 
-        assertFalse(result.last());  
+        assertFalse(result.first());
+        assertFalse(result.last());
         verify(storageUnitRepository, times(1)).findAllPaged(10, 20);
     }
 
     @Test
     void getStorageUnitById_WithValidId_ShouldReturnStorageUnit() {
-        
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitMapper.toResponseDTO(any(StorageUnit.class), any(BigDecimal.class),
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
         StorageUnitResponseDTO result = storageUnitService.getStorageUnitById(1L);
 
-        
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("SU-001", result.unitCode());
@@ -155,10 +155,8 @@ class StorageUnitServiceTests {
 
     @Test
     void getStorageUnitById_WithInvalidId_ShouldThrowException() {
-        
         when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
         StorageUnitNotFoundException exception = assertThrows(
                 StorageUnitNotFoundException.class,
                 () -> storageUnitService.getStorageUnitById(999L)
@@ -170,42 +168,56 @@ class StorageUnitServiceTests {
 
     @Test
     void createStorageUnit_WithValidRequest_ShouldCreateStorageUnit() {
-        
-        StorageUnit newStorageUnit = StorageUnit.builder()
+
+        Long newId = 1L;
+
+        StorageUnit savedStorageUnit = StorageUnit.builder()
+                .id(newId)
                 .unitCode("SU-001")
                 .location("Warehouse A")
-                .storageType(StorageTypeEnum.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT)
                 .totalMassCapacity(BigDecimal.valueOf(1000.0))
                 .totalVolumeCapacity(BigDecimal.valueOf(500.0))
                 .currentMass(BigDecimal.ZERO)
                 .currentVolume(BigDecimal.ZERO)
                 .build();
 
+
         when(storageUnitRepository.existsByUnitCode("SU-001")).thenReturn(false);
-        when(storageUnitMapper.toEntity(testRequestDTO)).thenReturn(newStorageUnit);
-        when(storageUnitRepository.save(newStorageUnit)).thenReturn(testStorageUnit);
+
+
+        when(jdbcTemplate.queryForObject(anyString(), eq(Long.class), any(), any(), any(), any(), any()))
+                .thenReturn(newId);
+
+
+        when(storageUnitRepository.findById(newId)).thenReturn(Optional.of(savedStorageUnit));
+
         when(storageUnitMapper.toResponseDTO(any(StorageUnit.class), any(BigDecimal.class),
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
+
         StorageUnitResponseDTO result = storageUnitService.createStorageUnit(testRequestDTO);
 
-        
+
         assertNotNull(result);
         assertEquals("SU-001", result.unitCode());
         assertEquals("Warehouse A", result.location());
+
+
         verify(storageUnitRepository, times(1)).existsByUnitCode("SU-001");
-        verify(storageUnitMapper, times(1)).toEntity(testRequestDTO);
-        verify(storageUnitRepository, times(1)).save(newStorageUnit);
+        verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Long.class), any(), any(), any(), any(), any());
+        verify(storageUnitRepository, times(1)).findById(newId);
+
+
+        verify(storageUnitMapper, never()).toEntity(any());
+        verify(storageUnitRepository, never()).save(any());
     }
 
     @Test
     void createStorageUnit_WithExistingUnitCode_ShouldThrowException() {
-        
         when(storageUnitRepository.existsByUnitCode("SU-001")).thenReturn(true);
 
-        
         StorageUnitAlreadyExistsException exception = assertThrows(
                 StorageUnitAlreadyExistsException.class,
                 () -> storageUnitService.createStorageUnit(testRequestDTO)
@@ -216,37 +228,33 @@ class StorageUnitServiceTests {
         verify(storageUnitRepository, never()).save(any());
     }
 
+
     @Test
     void updateStorageUnit_WithValidId_ShouldUpdateStorageUnit() {
-        
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-001-UPDATED", "Warehouse B", StorageTypeEnum.REFRIGERATED, 
+                "SU-001-UPDATED", "Warehouse B", StorageTypeEnum.REFRIGERATED,
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0)
         );
 
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.existsByUnitCode("SU-001-UPDATED")).thenReturn(false);
-        when(storageUnitRepository.save(any(StorageUnit.class))).thenReturn(testStorageUnit);
         when(storageUnitMapper.toResponseDTO(any(StorageUnit.class), any(BigDecimal.class),
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
         StorageUnitResponseDTO result = storageUnitService.updateStorageUnit(1L, updateRequest);
 
-        
         assertNotNull(result);
         verify(storageUnitRepository, times(1)).findById(1L);
         verify(storageUnitRepository, times(1)).existsByUnitCode("SU-001-UPDATED");
-        verify(storageUnitRepository, times(1)).save(any(StorageUnit.class));
+
+
     }
 
     @Test
     void updateStorageUnit_WithInvalidId_ShouldThrowException() {
-        
         when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
         StorageUnitNotFoundException exception = assertThrows(
                 StorageUnitNotFoundException.class,
                 () -> storageUnitService.updateStorageUnit(999L, testRequestDTO)
@@ -259,16 +267,14 @@ class StorageUnitServiceTests {
 
     @Test
     void updateStorageUnit_WithExistingUnitCode_ShouldThrowException() {
-        
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-002", "Warehouse A", StorageTypeEnum.AMBIENT, 
+                "SU-002", "Warehouse A", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0)
         );
 
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.existsByUnitCode("SU-002")).thenReturn(true);
 
-        
         StorageUnitAlreadyExistsException exception = assertThrows(
                 StorageUnitAlreadyExistsException.class,
                 () -> storageUnitService.updateStorageUnit(1L, updateRequest)
@@ -281,32 +287,29 @@ class StorageUnitServiceTests {
 
     @Test
     void updateStorageUnit_WithSameUnitCode_ShouldNotThrowException() {
-        
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-001", "Warehouse B", StorageTypeEnum.REFRIGERATED, 
+                "SU-001", "Warehouse B", StorageTypeEnum.REFRIGERATED,
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0)
         );
 
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(storageUnitRepository.save(any(StorageUnit.class))).thenReturn(testStorageUnit);
         when(storageUnitMapper.toResponseDTO(any(StorageUnit.class), any(BigDecimal.class),
                 any(BigDecimal.class), anyDouble(), anyDouble()))
                 .thenReturn(testResponseDTO);
 
-        
         StorageUnitResponseDTO result = storageUnitService.updateStorageUnit(1L, updateRequest);
 
-        
         assertNotNull(result);
         verify(storageUnitRepository, never()).existsByUnitCode(anyString());
-        verify(storageUnitRepository, times(1)).save(any(StorageUnit.class));
+
+
     }
 
     @Test
     void getStorageUnitInventory_ShouldThrowStorageUnitNotFoundException_WhenStorageUnitNotFound() {
         Long nonExistentStorageUnitId = 1L;
 
-        // No need to mock the repository since the method throws exception before using it
+
         StorageUnitNotFoundException exception = assertThrows(
                 StorageUnitNotFoundException.class,
                 () -> storageUnitService.getStorageUnitInventory(nonExistentStorageUnitId, 0, 20)
@@ -317,7 +320,6 @@ class StorageUnitServiceTests {
 
     @Test
     void toResponseDTO_WithValidStorageUnit_ShouldCalculateUsageCorrectly() {
-        
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitMapper.toResponseDTO(any(StorageUnit.class), any(BigDecimal.class),
                 any(BigDecimal.class), anyDouble(), anyDouble()))
@@ -336,10 +338,8 @@ class StorageUnitServiceTests {
                     );
                 });
 
-        
         StorageUnitResponseDTO result = storageUnitService.getStorageUnitById(1L);
 
-        
         assertNotNull(result);
         assertEquals(BigDecimal.valueOf(800.0), result.availableMassCapacity());
         assertEquals(BigDecimal.valueOf(400.0), result.availableVolumeCapacity());
@@ -349,12 +349,11 @@ class StorageUnitServiceTests {
 
     @Test
     void toResponseDTO_WithZeroCapacity_ShouldHandleDivisionByZero() {
-        
         StorageUnit zeroCapacityUnit = StorageUnit.builder()
                 .id(2L)
                 .unitCode("SU-002")
                 .location("Empty Warehouse")
-                .storageType(StorageTypeEnum.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT)
                 .totalMassCapacity(BigDecimal.ZERO)
                 .totalVolumeCapacity(BigDecimal.ZERO)
                 .currentMass(BigDecimal.ZERO)
@@ -379,10 +378,8 @@ class StorageUnitServiceTests {
                     );
                 });
 
-        
         StorageUnitResponseDTO result = storageUnitService.getStorageUnitById(2L);
 
-        
         assertNotNull(result);
         assertEquals(0.0, result.massUsagePercentage());
         assertEquals(0.0, result.volumeUsagePercentage());

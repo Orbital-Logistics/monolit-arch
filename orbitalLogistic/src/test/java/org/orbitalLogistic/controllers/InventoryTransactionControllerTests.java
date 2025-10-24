@@ -51,19 +51,19 @@ class InventoryTransactionControllerTests {
                 "Routine transfer"
         );
 
-        
+
         testTransactionRequest = new InventoryTransactionRequestDTO(
-                TransactionType.TRANSFER, 
-                100L,                     
-                10,                       
-                10L,                      
-                20L,                      
-                null,                     
-                null,                     
-                999L,                     
-                "RC-01",                  
-                "REF-12345",              
-                "Routine transfer"        
+                TransactionType.TRANSFER,
+                100L,
+                10,
+                10L,
+                20L,
+                null,
+                null,
+                999L,
+                "RC-01",
+                "REF-12345",
+                "Routine transfer"
         );
 
         testPageResponse = new PageResponseDTO<>(

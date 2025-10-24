@@ -100,7 +100,7 @@ class CargoStorageServiceTests {
 
     @Test
     void getAllCargoStorage_WithValidParameters_ShouldReturnPageResponse() {
-        // Given
+
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.count()).thenReturn(1L);
         when(cargoStorageRepository.findAll()).thenReturn(cargoStorages);
@@ -111,10 +111,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getAllCargoStorage(0, 20);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -127,14 +127,14 @@ class CargoStorageServiceTests {
 
     @Test
     void getAllCargoStorage_WithNoStorage_ShouldReturnEmptyPage() {
-        // Given
+
         when(cargoStorageRepository.count()).thenReturn(0L);
         when(cargoStorageRepository.findAll()).thenReturn(List.of());
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getAllCargoStorage(0, 20);
 
-        // Then
+
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -144,7 +144,7 @@ class CargoStorageServiceTests {
 
     @Test
     void getStorageUnitCargo_WithValidStorageUnitId_ShouldReturnPageResponse() {
-        // Given
+
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(1L)).thenReturn(cargoStorages);
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
@@ -154,10 +154,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getStorageUnitCargo(1L, 0, 20);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -169,13 +169,13 @@ class CargoStorageServiceTests {
 
     @Test
     void getStorageUnitCargo_WithNoCargo_ShouldReturnEmptyPage() {
-        // Given
+
         when(cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(1L)).thenReturn(List.of());
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getStorageUnitCargo(1L, 0, 20);
 
-        // Then
+
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -184,7 +184,7 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithNewCargo_ShouldCreateStorage() {
-        // Given
+
         CargoStorage newCargoStorage = CargoStorage.builder()
                 .cargoId(1L)
                 .storageUnitId(1L)
@@ -206,10 +206,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.addCargoToStorage(testRequestDTO);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(100, result.quantity());
 
@@ -223,14 +223,14 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithInvalidCargo_ShouldThrowException() {
-        // Given
+
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
         CargoStorageRequestDTO requestWithInvalidCargo = new CargoStorageRequestDTO(
                 1L, 999L, 100, 1L, "Transfer", "Moving cargo"
         );
 
-        // When & Then
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoStorageService.addCargoToStorage(requestWithInvalidCargo)
@@ -243,7 +243,7 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithInvalidStorageUnit_ShouldThrowException() {
-        // Given
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -251,7 +251,7 @@ class CargoStorageServiceTests {
                 999L, 1L, 100, 1L, "Transfer", "Moving cargo"
         );
 
-        // When & Then
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoStorageService.addCargoToStorage(requestWithInvalidStorageUnit)
@@ -264,7 +264,7 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithInvalidUser_ShouldThrowException() {
-        // Given
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
@@ -273,7 +273,7 @@ class CargoStorageServiceTests {
                 1L, 1L, 100, 999L, "Transfer", "Moving cargo"
         );
 
-        // When & Then
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoStorageService.addCargoToStorage(requestWithInvalidUser)
@@ -286,7 +286,7 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithNullUser_ShouldNotValidateUser() {
-        // Given
+
         CargoStorageRequestDTO requestWithNullUser = new CargoStorageRequestDTO(
                 1L, 1L, 100, null, "Transfer", "Moving cargo"
         );
@@ -310,10 +310,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.addCargoToStorage(requestWithNullUser);
 
-        // Then
+
         assertNotNull(result);
 
         verify(cargoStorageRepository, times(1)).save(any(CargoStorage.class));
@@ -321,12 +321,12 @@ class CargoStorageServiceTests {
 
     @Test
     void updateQuantity_WithValidId_ShouldUpdateQuantity() {
-        // Given
+
         CargoStorageRequestDTO updateRequest = new CargoStorageRequestDTO(
                 1L, 1L, 200, 1L, "Update", "Updating quantity"
         );
 
-        // When
+
         CargoStorage updatedStorage = CargoStorage.builder()
                 .id(1L)
                 .cargoId(1L)
@@ -346,10 +346,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, updateRequest);
 
-        // Then
+
         assertNotNull(result);
         verify(cargoStorageRepository, times(1)).findById(1L);
         verify(cargoStorageRepository, times(1)).save(any(CargoStorage.class));
@@ -357,10 +357,10 @@ class CargoStorageServiceTests {
 
     @Test
     void updateQuantity_WithInvalidId_ShouldThrowException() {
-        // Given
+
         when(cargoStorageRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When & Then
+
         CargoStorageNotFoundException exception = assertThrows(
                 CargoStorageNotFoundException.class,
                 () -> cargoStorageService.updateQuantity(999L, testRequestDTO)
@@ -373,7 +373,7 @@ class CargoStorageServiceTests {
 
     @Test
     void addCargoToStorage_WithExistingCargo_ShouldUpdateQuantity() {
-        // Given
+
         CargoStorage existingStorage = CargoStorage.builder()
                 .id(1L)
                 .cargoId(1L)
@@ -393,10 +393,10 @@ class CargoStorageServiceTests {
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), anyString(), anyString(), anyString(), any()))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.addCargoToStorage(testRequestDTO);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(150, existingStorage.getQuantity());
         verify(cargoStorageRepository, times(1)).save(existingStorage);
@@ -407,12 +407,12 @@ class CargoStorageServiceTests {
 
     @Test
     void updateQuantity_WithNullUser_ShouldNotUpdateUser() {
-        // Given
+
         CargoStorageRequestDTO updateRequest = new CargoStorageRequestDTO(
                 1L, 1L, 200, null, "Update", "Updating quantity"
         );
 
-        // When
+
         CargoStorage cargoStorageWithNullUser = CargoStorage.builder()
                 .id(1L)
                 .cargoId(1L)
@@ -430,10 +430,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, updateRequest);
 
-        // Then
+
         assertNotNull(result);
         assertNull(cargoStorageWithNullUser.getLastCheckedByUserId());
         verify(cargoStorageRepository, times(1)).save(cargoStorageWithNullUser);
@@ -441,7 +441,7 @@ class CargoStorageServiceTests {
 
     @Test
     void toResponseDTO_WithValidCargoStorage_ShouldReturnResponseDTO() {
-        // Given
+
         CargoStorage savedCargoStorage = CargoStorage.builder()
                 .id(1L)
                 .storageUnitId(1L)
@@ -459,10 +459,10 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, testRequestDTO);
 
-        // Then
+
         assertNotNull(result);
         assertEquals("SU-001", result.storageUnitCode());
         assertEquals("Warehouse A", result.storageLocation());
@@ -475,7 +475,7 @@ class CargoStorageServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidStorageUnit_ShouldThrowException() {
-        // Given
+
         CargoStorage savedCargoStorage = CargoStorage.builder()
                 .id(1L)
                 .storageUnitId(1L)
@@ -487,7 +487,7 @@ class CargoStorageServiceTests {
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(savedCargoStorage);
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // When & Then
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoStorageService.updateQuantity(1L, testRequestDTO)
@@ -499,7 +499,7 @@ class CargoStorageServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidCargo_ShouldThrowException() {
-        // Given
+
         CargoStorage savedCargoStorage = CargoStorage.builder()
                 .id(1L)
                 .storageUnitId(1L)
@@ -512,7 +512,7 @@ class CargoStorageServiceTests {
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(cargoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // When & Then
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> cargoStorageService.updateQuantity(1L, testRequestDTO)
@@ -524,7 +524,7 @@ class CargoStorageServiceTests {
 
     @Test
     void toResponseDTO_WithNullUser_ShouldReturnNullUserName() {
-        // Given
+
         CargoStorage savedCargoStorage = CargoStorage.builder()
                 .id(1L)
                 .cargoId(1L)
@@ -542,23 +542,23 @@ class CargoStorageServiceTests {
                 eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, testRequestDTO);
 
-        // Then
+
         assertNotNull(result);
 
         verify(userRepository, never()).findById(any());
     }
     @Test
     void getAllCargoStorage_WithPagination_ShouldReturnCorrectPage() {
-        // Given
+
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.count()).thenReturn(25L);
         when(cargoStorageRepository.findAll()).thenReturn(cargoStorages);
 
-        // Убираем ненужные заглушки, так как они не используются в этом тесте
-        // или используем lenient если они нужны для других целей
+
+
         lenient().when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         lenient().when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
@@ -566,24 +566,24 @@ class CargoStorageServiceTests {
                         eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getAllCargoStorage(1, 10);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(1, result.currentPage());
         assertEquals(10, result.pageSize());
         assertEquals(25, result.totalElements());
-        assertEquals(3, result.totalPages()); // ceil(25/10) = 3
+        assertEquals(3, result.totalPages());
     }
 
     @Test
     void getStorageUnitCargo_WithPagination_ShouldReturnCorrectPage() {
-        // Given
+
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(1L)).thenReturn(cargoStorages);
 
-        // Убираем ненужные заглушки или используем lenient
+
         lenient().when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         lenient().when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
@@ -591,10 +591,10 @@ class CargoStorageServiceTests {
                         eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-        // When
+
         PageResponseDTO<CargoStorageResponseDTO> result = cargoStorageService.getStorageUnitCargo(1L, 1, 5);
 
-        // Then
+
         assertNotNull(result);
         assertEquals(1, result.currentPage());
         assertEquals(5, result.pageSize());
