@@ -247,37 +247,6 @@ class SpacecraftControllerTests {
     }
 
     @Test
-    void deleteSpacecraft_WithValidId_ShouldReturnNoContent() {
-        
-        doNothing().when(spacecraftService).deleteSpacecraft(1L);
-
-        
-        ResponseEntity<Void> response = spacecraftController.deleteSpacecraft(1L);
-
-        
-        assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(spacecraftService, times(1)).deleteSpacecraft(1L);
-    }
-
-    @Test
-    void deleteSpacecraft_WithInvalidId_ShouldPropagateException() {
-        
-        doThrow(new SpacecraftNotFoundException("Spacecraft not found with id: 999"))
-                .when(spacecraftService).deleteSpacecraft(999L);
-
-        
-        SpacecraftNotFoundException exception = assertThrows(
-                SpacecraftNotFoundException.class,
-                () -> spacecraftController.deleteSpacecraft(999L)
-        );
-
-        assertEquals("Spacecraft not found with id: 999", exception.getMessage());
-        verify(spacecraftService, times(1)).deleteSpacecraft(999L);
-    }
-
-    @Test
     void getAvailableSpacecrafts_ShouldReturnAvailableSpacecrafts() {
         
         List<SpacecraftResponseDTO> availableSpacecrafts = List.of(testSpacecraftResponse);

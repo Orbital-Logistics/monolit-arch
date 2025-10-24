@@ -303,14 +303,16 @@ class StorageUnitServiceTests {
     }
 
     @Test
-    void getStorageUnitInventory_ShouldThrowUnsupportedOperationException() {
-        
-        UnsupportedOperationException exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> storageUnitService.getStorageUnitInventory(1L, 0, 20)
+    void getStorageUnitInventory_ShouldThrowStorageUnitNotFoundException_WhenStorageUnitNotFound() {
+        Long nonExistentStorageUnitId = 1L;
+
+        // No need to mock the repository since the method throws exception before using it
+        StorageUnitNotFoundException exception = assertThrows(
+                StorageUnitNotFoundException.class,
+                () -> storageUnitService.getStorageUnitInventory(nonExistentStorageUnitId, 0, 20)
         );
 
-        assertEquals("Not implemented yet", exception.getMessage());
+        assertEquals("Storage unit not found with id: " + nonExistentStorageUnitId, exception.getMessage());
     }
 
     @Test

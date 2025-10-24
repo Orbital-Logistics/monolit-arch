@@ -17,6 +17,7 @@ import org.orbitalLogistic.exceptions.CargoAlreadyExistsException;
 import org.orbitalLogistic.exceptions.CargoNotFoundException;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.CargoMapper;
+import org.orbitalLogistic.repositories.CargoManifestRepository;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.CargoCategoryRepository;
 
@@ -36,6 +37,9 @@ class CargoServiceTests {
 
     @Mock
     private CargoCategoryRepository cargoCategoryRepository;
+
+    @Mock
+    private CargoManifestRepository cargoManifestRepository;
 
     @Mock
     private CargoMapper cargoMapper;
@@ -374,14 +378,17 @@ class CargoServiceTests {
 
     @Test
     void deleteCargo_WithValidId_ShouldDeleteCargo() {
-        
+        // Given
         when(cargoRepository.existsById(1L)).thenReturn(true);
+        when(cargoManifestRepository.existsByCargoId(1L)).thenReturn(false); // Добавлена проверка
+        doNothing().when(cargoRepository).deleteById(1L);
 
-        
+        // When
         cargoService.deleteCargo(1L);
 
-        
+        // Then
         verify(cargoRepository, times(1)).existsById(1L);
+        verify(cargoManifestRepository, times(1)).existsByCargoId(1L); // Проверка вызова
         verify(cargoRepository, times(1)).deleteById(1L);
     }
 
