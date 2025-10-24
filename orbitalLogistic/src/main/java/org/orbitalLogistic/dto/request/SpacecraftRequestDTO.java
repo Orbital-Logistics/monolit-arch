@@ -25,6 +25,7 @@ public record SpacecraftRequestDTO(
     @DecimalMin("0.01")
     BigDecimal volumeCapacity,
 
+    @NotNull
     SpacecraftStatus status,
 
     @Size(max = 100)

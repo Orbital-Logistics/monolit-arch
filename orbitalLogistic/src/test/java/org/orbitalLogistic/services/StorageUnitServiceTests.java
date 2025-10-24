@@ -10,7 +10,7 @@ import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
 import org.orbitalLogistic.entities.StorageUnit;
-import org.orbitalLogistic.entities.enums.StorageType;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
 import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
 import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.orbitalLogistic.mappers.StorageUnitMapper;
@@ -46,7 +46,7 @@ class StorageUnitServiceTests {
                 .id(1L)
                 .unitCode("SU-001")
                 .location("Warehouse A")
-                .storageType(StorageType.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT) 
                 .totalMassCapacity(BigDecimal.valueOf(1000.0))
                 .totalVolumeCapacity(BigDecimal.valueOf(500.0))
                 .currentMass(BigDecimal.valueOf(200.0))
@@ -54,7 +54,7 @@ class StorageUnitServiceTests {
                 .build();
 
         testResponseDTO = new StorageUnitResponseDTO(
-                1L, "SU-001", "Warehouse A", StorageType.AMBIENT,
+                1L, "SU-001", "Warehouse A", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0),
                 BigDecimal.valueOf(200.0), BigDecimal.valueOf(100.0),
                 BigDecimal.valueOf(800.0), BigDecimal.valueOf(400.0),
@@ -62,7 +62,7 @@ class StorageUnitServiceTests {
         );
 
         testRequestDTO = new StorageUnitRequestDTO(
-                "SU-001", "Warehouse A", StorageType.AMBIENT,
+                "SU-001", "Warehouse A", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0)
         );
     }
@@ -174,7 +174,7 @@ class StorageUnitServiceTests {
         StorageUnit newStorageUnit = StorageUnit.builder()
                 .unitCode("SU-001")
                 .location("Warehouse A")
-                .storageType(StorageType.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT) 
                 .totalMassCapacity(BigDecimal.valueOf(1000.0))
                 .totalVolumeCapacity(BigDecimal.valueOf(500.0))
                 .currentMass(BigDecimal.ZERO)
@@ -220,7 +220,7 @@ class StorageUnitServiceTests {
     void updateStorageUnit_WithValidId_ShouldUpdateStorageUnit() {
         
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-001-UPDATED", "Warehouse B", StorageType.REFRIGERATED, 
+                "SU-001-UPDATED", "Warehouse B", StorageTypeEnum.REFRIGERATED, 
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0)
         );
 
@@ -261,7 +261,7 @@ class StorageUnitServiceTests {
     void updateStorageUnit_WithExistingUnitCode_ShouldThrowException() {
         
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-002", "Warehouse A", StorageType.AMBIENT, 
+                "SU-002", "Warehouse A", StorageTypeEnum.AMBIENT, 
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0)
         );
 
@@ -283,7 +283,7 @@ class StorageUnitServiceTests {
     void updateStorageUnit_WithSameUnitCode_ShouldNotThrowException() {
         
         StorageUnitRequestDTO updateRequest = new StorageUnitRequestDTO(
-                "SU-001", "Warehouse B", StorageType.REFRIGERATED, 
+                "SU-001", "Warehouse B", StorageTypeEnum.REFRIGERATED, 
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0)
         );
 
@@ -354,7 +354,7 @@ class StorageUnitServiceTests {
                 .id(2L)
                 .unitCode("SU-002")
                 .location("Empty Warehouse")
-                .storageType(StorageType.AMBIENT) 
+                .storageType(StorageTypeEnum.AMBIENT) 
                 .totalMassCapacity(BigDecimal.ZERO)
                 .totalVolumeCapacity(BigDecimal.ZERO)
                 .currentMass(BigDecimal.ZERO)
