@@ -1,7 +1,7 @@
 package org.orbitalLogistic.repositories;
 
 import org.orbitalLogistic.entities.StorageUnit;
-import org.orbitalLogistic.entities.enums.StorageType;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +15,7 @@ public interface StorageUnitRepository extends CrudRepository<StorageUnit, Long>
 
     Optional<StorageUnit> findByUnitCode(String unitCode);
     boolean existsByUnitCode(String unitCode);
-    List<StorageUnit> findByStorageType(StorageType storageType);
+    List<StorageUnit> findByStorageType(StorageTypeEnum storageType);
 
     @Query("SELECT su.* FROM storage_unit su ORDER BY su.id LIMIT :limit OFFSET :offset")
     List<StorageUnit> findAllPaged(@Param("limit") int limit, @Param("offset") int offset);

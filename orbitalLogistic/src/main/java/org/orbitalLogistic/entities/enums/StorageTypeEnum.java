@@ -1,5 +1,5 @@
 package org.orbitalLogistic.entities.enums;
 
-public enum StorageType {
+public enum StorageTypeEnum {
     AMBIENT, REFRIGERATED, PRESSURIZED, HAZMAT
 }

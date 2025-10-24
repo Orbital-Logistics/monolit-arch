@@ -1,6 +1,7 @@
 package org.orbitalLogistic.repositories;
 
 import org.orbitalLogistic.entities.SpacecraftMission;
+import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -48,18 +49,21 @@ public interface SpacecraftMissionRepository extends CrudRepository<SpacecraftMi
     """)
     List<Long> findAvailableMissionsBySpacecraftId(@Param("spacecraftId") Long spacecraftId);
 
+    @Modifying
     @Query("""
         DELETE FROM spacecraft_mission 
         WHERE spacecraft_id = :spacecraftId AND mission_id = :missionId
     """)
     void deleteBySpacecraftIdAndMissionId(@Param("spacecraftId") Long spacecraftId, @Param("missionId") Long missionId);
 
+    @Modifying
     @Query("""
         DELETE FROM spacecraft_mission 
         WHERE mission_id = :missionId
     """)
     void deleteByMissionId(@Param("missionId") Long missionId);
 
+    @Modifying
     @Query("""
         DELETE FROM spacecraft_mission 
         WHERE spacecraft_id = :spacecraftId
