@@ -110,4 +110,123 @@ public class EnumToStringConverter {
         }
     }
 
+    // Transaction Type
+    @WritingConverter
+    public static class TransactionTypeEnumToString implements Converter<TransactionType, String> {
+        @Override
+        public String convert(TransactionType source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToTransactionTypeEnum implements Converter<String, TransactionType> {
+        @Override
+        public TransactionType convert(String source) {
+            return source != null ? TransactionType.valueOf(source) : null;
+        }
+    }
+
+    // Manifest Status
+    @WritingConverter
+    public static class ManifestStatusEnumToString implements Converter<ManifestStatus, String> {
+        @Override
+        public String convert(ManifestStatus source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToManifestStatusEnum implements Converter<String, ManifestStatus> {
+        @Override
+        public ManifestStatus convert(String source) {
+            return source != null ? ManifestStatus.valueOf(source) : null;
+        }
+    }
+
+    // Manifest Priority
+    @WritingConverter
+    public static class ManifestPriorityEnumToString implements Converter<ManifestPriority, String> {
+        @Override
+        public String convert(ManifestPriority source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToManifestPriorityEnum implements Converter<String, ManifestPriority> {
+        @Override
+        public ManifestPriority convert(String source) {
+            return source != null ? ManifestPriority.valueOf(source) : null;
+        }
+    }
+
+    // Maintenance Type
+    @WritingConverter
+    public static class MaintenanceTypeEnumToString implements Converter<MaintenanceType, String> {
+        @Override
+        public String convert(MaintenanceType source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToMaintenanceTypeEnum implements Converter<String, MaintenanceType> {
+        @Override
+        public MaintenanceType convert(String source) {
+            return source != null ? MaintenanceType.valueOf(source) : null;
+        }
+    }
+
+    // Maintenance Status
+    @WritingConverter
+    public static class MaintenanceStatusEnumToString implements Converter<MaintenanceStatus, String> {
+        @Override
+        public String convert(MaintenanceStatus source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToMaintenanceStatusEnum implements Converter<String, MaintenanceStatus> {
+        @Override
+        public MaintenanceStatus convert(String source) {
+            return source != null ? MaintenanceStatus.valueOf(source) : null;
+        }
+    }
+
+    // Assignment Role
+    @WritingConverter
+    public static class AssignmentRoleEnumToString implements Converter<AssignmentRole, String> {
+        @Override
+        public String convert(AssignmentRole source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToAssignmentRoleEnum implements Converter<String, AssignmentRole> {
+        @Override
+        public AssignmentRole convert(String source) {
+            return source != null ? AssignmentRole.valueOf(source) : null;
+        }
+    }
+
+    // Mission Priority
+    @WritingConverter
+    public static class MissionPriorityEnumToString implements Converter<MissionPriority, String> {
+        @Override
+        public String convert(MissionPriority source) {
+            return source != null ? source.name() : null;
+        }
+    }
+
+    @ReadingConverter
+    public static class StringToMissionPriorityEnum implements Converter<String, MissionPriority> {
+        @Override
+        public MissionPriority convert(String source) {
+            return source != null ? MissionPriority.valueOf(source) : null;
+        }
+    }
+
 }
