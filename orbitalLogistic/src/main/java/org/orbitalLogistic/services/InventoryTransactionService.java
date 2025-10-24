@@ -128,7 +128,7 @@ public class InventoryTransactionService {
                 cargo.getName(),
                 fromLocation,
                 toLocation,
-                performedByUser.getFirst_name() + " " + performedByUser.getLast_name());
+                performedByUser.getUsername());
     }
 
     private String getLocationName(Long storageUnitId, Long spacecraftId) {

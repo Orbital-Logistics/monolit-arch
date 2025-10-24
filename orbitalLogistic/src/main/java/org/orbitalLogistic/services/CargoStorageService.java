@@ -124,7 +124,7 @@ public class CargoStorageService {
         if (cargoStorage.getLastCheckedByUserId() != null) {
             User user = userRepository.findById(cargoStorage.getLastCheckedByUserId()).orElse(null);
             if (user != null) {
-                lastCheckedByUserName = user.getFirst_name() + " " + user.getLast_name();
+                lastCheckedByUserName = user.getUsername();
             }
         }
 

@@ -29,21 +29,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @GetMapping("/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
         UserResponseDTO user = userService.findUserByEmail(email);
         return ResponseEntity.ok(user);
-    }
-
-    @GetMapping
-    public ResponseEntity<PageResponseDTO<UserResponseDTO>> getUsers(
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String name,
-            @RequestParam(defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size
-    ) {
-        PageResponseDTO<UserResponseDTO> users = userService.getUsers(email, name, page, size);
-        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")

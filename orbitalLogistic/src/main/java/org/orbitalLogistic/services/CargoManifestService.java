@@ -172,7 +172,7 @@ public class CargoManifestService {
         if (manifest.getUnloadedByUserId() != null) {
             User unloadedByUser = userRepository.findById(manifest.getUnloadedByUserId()).orElse(null);
             if (unloadedByUser != null) {
-                unloadedByUserName = unloadedByUser.getFirst_name() + " " + unloadedByUser.getLast_name();
+                unloadedByUserName = unloadedByUser.getUsername();
             }
         }
 
@@ -180,7 +180,7 @@ public class CargoManifestService {
                 spacecraft.getName(),
                 cargo.getName(),
                 storageUnit.getUnitCode(),
-                loadedByUser.getFirst_name() + " " + loadedByUser.getLast_name(),
+                loadedByUser.getUsername(),
                 unloadedByUserName);
     }
 }

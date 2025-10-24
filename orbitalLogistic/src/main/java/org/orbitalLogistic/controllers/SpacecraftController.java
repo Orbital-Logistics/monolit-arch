@@ -52,12 +52,6 @@ public class SpacecraftController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSpacecraft(@PathVariable Long id) {
-        spacecraftService.deleteSpacecraft(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/available")
     public ResponseEntity<List<SpacecraftResponseDTO>> getAvailableSpacecrafts() {
         List<SpacecraftResponseDTO> response = spacecraftService.getAvailableSpacecrafts();

@@ -90,7 +90,7 @@ public class SpacecraftMissionService {
         if (assignedByUserId != null) {
             User user = userRepository.findById(assignedByUserId).orElse(null);
             if (user != null) {
-                assignedByUserName = user.getFirst_name() + " " + user.getLast_name();
+                assignedByUserName = user.getUsername();
             }
         }
 

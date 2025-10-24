@@ -1,0 +1,2 @@
+docker compose down
+docker volume rm orbitallogistic_db_data
