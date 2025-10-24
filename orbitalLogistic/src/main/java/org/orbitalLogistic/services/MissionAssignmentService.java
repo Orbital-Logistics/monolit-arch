@@ -7,13 +7,16 @@ import org.orbitalLogistic.dto.response.MissionAssignmentResponseDTO;
 import org.orbitalLogistic.entities.MissionAssignment;
 import org.orbitalLogistic.entities.Mission;
 import org.orbitalLogistic.entities.User;
+import org.orbitalLogistic.entities.enums.AssignmentRole;
 import org.orbitalLogistic.exceptions.MissionAssignmentNotFoundException;
 import org.orbitalLogistic.exceptions.MissionNotFoundException;
+import org.orbitalLogistic.exceptions.UserAlreadyAssignedException;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.MissionAssignmentMapper;
 import org.orbitalLogistic.repositories.MissionAssignmentRepository;
 import org.orbitalLogistic.repositories.MissionRepository;
 import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ public class MissionAssignmentService {
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
     private final MissionAssignmentMapper missionAssignmentMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public PageResponseDTO<MissionAssignmentResponseDTO> getAllAssignments(int page, int size) {
@@ -95,7 +99,7 @@ public class MissionAssignmentService {
     }
 
     private MissionAssignment createAssignment(Long missionId, Long userId,
-            org.orbitalLogistic.entities.enums.AssignmentRole role, String responsibilityZone) {
+        org.orbitalLogistic.entities.enums.AssignmentRole role, String responsibilityZone) {
 
         // Check if user exists
         User user = userRepository.findById(userId)
@@ -103,18 +107,36 @@ public class MissionAssignmentService {
 
         // Check if assignment already exists
         if (missionAssignmentRepository.existsByMissionIdAndUserId(missionId, userId)) {
-            throw new RuntimeException("User already assigned to this mission");
+                throw new UserAlreadyAssignedException(missionId, userId, user.getUsername());
         }
 
-        MissionAssignment assignment = MissionAssignment.builder()
-                .missionId(missionId)
-                .userId(userId)
-                .assignmentRole(role)
-                .responsibilityZone(responsibilityZone)
-                .build();
+        // Используем JdbcTemplate для создания с явным CAST enum
+        String sql = "INSERT INTO mission_assignment " +
+                        "(mission_id, user_id, assignment_role, responsibility_zone) " +
+                        "VALUES (?, ?, ?::assignment_role_enum, ?) " +
+                        "RETURNING id";
+        
+        Long newId = jdbcTemplate.queryForObject(sql, Long.class,
+                missionId,
+                userId,
+                role.name(), // Преобразуем enum в string
+                responsibilityZone
+        );
 
-        return missionAssignmentRepository.save(assignment);
-    }
+        // Получаем созданную запись
+        String selectSql = "SELECT * FROM mission_assignment WHERE id = ?";
+        
+        return jdbcTemplate.queryForObject(selectSql, 
+                (rs, rowNum) -> MissionAssignment.builder()
+                        .id(rs.getLong("id"))
+                        .missionId(rs.getLong("mission_id"))
+                        .userId(rs.getLong("user_id"))
+                        .assignmentRole(AssignmentRole.valueOf(rs.getString("assignment_role")))
+                        .responsibilityZone(rs.getString("responsibility_zone"))
+                        .assignedAt(rs.getTimestamp("assigned_at").toLocalDateTime())
+                        .build(),
+                newId);
+        }
 
     private MissionAssignmentResponseDTO toResponseDTO(MissionAssignment assignment) {
         Mission mission = missionRepository.findById(assignment.getMissionId())

@@ -14,10 +14,8 @@ public class JacksonConfig {
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
         
-        // Сериализация enum как строк
         objectMapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-        
-        // Для Java 8 Date/Time
+
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         
