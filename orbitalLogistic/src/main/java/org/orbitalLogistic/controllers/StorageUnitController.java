@@ -4,15 +4,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
+import org.orbitalLogistic.dto.response.CargoStorageResponseDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
 import org.orbitalLogistic.services.StorageUnitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/storage-units")
 @RequiredArgsConstructor
+@Validated
 public class StorageUnitController {
 
     private final StorageUnitService storageUnitService;
@@ -21,7 +24,7 @@ public class StorageUnitController {
     public ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> getAllStorageUnits(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         PageResponseDTO<StorageUnitResponseDTO> response = storageUnitService.getStorageUnits(page, size);
         return ResponseEntity.ok(response);
     }
@@ -48,12 +51,12 @@ public class StorageUnitController {
     }
 
     @GetMapping("/{id}/inventory")
-    public ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> getStorageUnitInventory(
+    public ResponseEntity<PageResponseDTO<CargoStorageResponseDTO>> getStorageUnitInventory(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        PageResponseDTO<StorageUnitResponseDTO> response = storageUnitService.getStorageUnitInventory(id, page, size);
+        PageResponseDTO<CargoStorageResponseDTO> response = storageUnitService.getStorageUnitInventory(id, page, size);
         return ResponseEntity.ok(response);
     }
 }
