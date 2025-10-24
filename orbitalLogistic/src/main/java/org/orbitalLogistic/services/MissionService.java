@@ -7,7 +7,9 @@ import org.orbitalLogistic.dto.response.MissionResponseDTO;
 import org.orbitalLogistic.entities.Mission;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.entities.Spacecraft;
+import org.orbitalLogistic.entities.enums.MissionPriority;
 import org.orbitalLogistic.entities.enums.MissionStatus;
+import org.orbitalLogistic.entities.enums.MissionType;
 import org.orbitalLogistic.exceptions.MissionNotFoundException;
 import org.orbitalLogistic.exceptions.MissionAlreadyExistsException;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
@@ -31,7 +33,7 @@ public class MissionService {
     private final UserRepository userRepository;
     private final SpacecraftRepository spacecraftRepository;
     private final MissionMapper missionMapper;
-    private final JdbcTemplate jdbcTemplate; // Добавляем JdbcTemplate
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public PageResponseDTO<MissionResponseDTO> getMissions(String missionCode, String status, String missionType, int page, int size) {
@@ -77,26 +79,40 @@ public class MissionService {
 
         // Используем JdbcTemplate для создания с явным CAST enum
         String sql = "INSERT INTO mission " +
-                     "(mission_code, mission_name, mission_type, status, priority, " +
-                     "commanding_officer_id, spacecraft_id, scheduled_departure, scheduled_arrival) " +
-                     "VALUES (?, ?, ?::mission_type_enum, ?::mission_status_enum, ?::mission_priority_enum, " +
-                     "?, ?, ?, ?) " +
-                     "RETURNING id";
+                    "(mission_code, mission_name, mission_type, status, priority, " +
+                    "commanding_officer_id, spacecraft_id, scheduled_departure, scheduled_arrival) " +
+                    "VALUES (?, ?, ?::mission_type_enum, ?::mission_status_enum, ?::mission_priority_enum, " +
+                    "?, ?, ?, ?) " +
+                    "RETURNING id";
         
         Long newId = jdbcTemplate.queryForObject(sql, Long.class,
                 request.missionCode(),
                 request.missionName(),
-                request.missionType().name(),     // mission_status_enum
+                request.missionType().name(),
                 request.status().name(),
-                request.priority().name(),    // mission_priority_enum
+                request.priority().name(),    
                 request.commandingOfficerId(),
                 request.spacecraftId(),
-                request.scheduledArrival()
+                request.scheduledDeparture(), 
+                request.scheduledArrival() 
         );
 
-        // Получаем созданную запись
-        Mission saved = missionRepository.findById(newId)
-                .orElseThrow(() -> new DataNotFoundException("Failed to create mission"));
+        String selectSql = "SELECT * FROM mission WHERE id = ?";
+        Mission saved = jdbcTemplate.queryForObject(selectSql, 
+            (rs, rowNum) -> Mission.builder()
+                    .id(rs.getLong("id"))
+                    .missionCode(rs.getString("mission_code"))
+                    .missionName(rs.getString("mission_name"))
+                    .missionType(MissionType.valueOf(rs.getString("mission_type")))
+                    .status(MissionStatus.valueOf(rs.getString("status")))
+                    .priority(MissionPriority.valueOf(rs.getString("priority")))
+                    .commandingOfficerId(rs.getLong("commanding_officer_id"))
+                    .spacecraftId(rs.getLong("spacecraft_id"))
+                    .scheduledDeparture(rs.getTimestamp("scheduled_departure").toLocalDateTime())
+                    .scheduledArrival(rs.getTimestamp("scheduled_arrival") != null ? 
+                        rs.getTimestamp("scheduled_arrival").toLocalDateTime() : null)
+                    .build(),
+            newId);
 
         return toResponseDTO(saved);
     }
@@ -131,6 +147,7 @@ public class MissionService {
                 request.priority().name(),    // mission_priority_enum
                 request.commandingOfficerId(),
                 request.spacecraftId(),
+                request.scheduledDeparture(),
                 request.scheduledArrival(),
                 id
         );
@@ -143,6 +160,7 @@ public class MissionService {
         mission.setPriority(request.priority());
         mission.setCommandingOfficerId(request.commandingOfficerId());
         mission.setSpacecraftId(request.spacecraftId());
+        mission.setScheduledDeparture(request.scheduledDeparture());
         mission.setScheduledArrival(request.scheduledArrival());
 
         return toResponseDTO(mission);

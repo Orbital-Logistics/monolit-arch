@@ -18,6 +18,7 @@ import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,8 @@ public class CargoManifestService {
     private final StorageUnitRepository storageUnitRepository;
     private final UserRepository userRepository;
     private final CargoManifestMapper cargoManifestMapper;
+    private final JdbcTemplate jdbcTemplate;
+
 
     @Transactional(readOnly = true)
     public PageResponseDTO<CargoManifestResponseDTO> getAllManifests(int page, int size) {
@@ -120,15 +123,28 @@ public class CargoManifestService {
 
         List<CargoManifest> activeManifests = cargoManifestRepository.findActiveCargoBySpacecraft(spacecraftId);
 
-        // Update manifests to unloaded status
+        // Update manifests to unloaded status используя JdbcTemplate
         List<CargoManifestResponseDTO> results = new ArrayList<>();
         for (CargoManifest manifest : activeManifests) {
+            String sql = "UPDATE cargo_manifest SET " +
+                         "manifest_status = ?::manifest_status_enum, " + // Явное приведение типа
+                         "unloaded_at = ?, " +
+                         "unloaded_by_user_id = ? " +
+                         "WHERE id = ?";
+            
+            jdbcTemplate.update(sql,
+                    ManifestStatus.UNLOADED.name(),
+                    LocalDateTime.now(),
+                    request.unloadedByUserId(),
+                    manifest.getId()
+            );
+
+            // Обновляем объект для возврата
             manifest.setManifestStatus(ManifestStatus.UNLOADED);
             manifest.setUnloadedAt(LocalDateTime.now());
             manifest.setUnloadedByUserId(request.unloadedByUserId());
 
-            CargoManifest updated = cargoManifestRepository.save(manifest);
-            results.add(toResponseDTO(updated));
+            results.add(toResponseDTO(manifest));
         }
 
         return results;
@@ -183,4 +199,5 @@ public class CargoManifestService {
                 loadedByUser.getUsername(),
                 unloadedByUserName);
     }
+    
 }
