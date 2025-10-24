@@ -2,6 +2,7 @@ package org.orbitalLogistic.dto.request;
 
 import jakarta.validation.constraints.*;
 import org.orbitalLogistic.entities.enums.MissionType;
+import org.orbitalLogistic.entities.enums.MissionStatus;
 import org.orbitalLogistic.entities.enums.MissionPriority;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,9 @@ public record MissionRequestDTO(
     @NotNull(message = "Mission type is required")
     MissionType missionType,
 
+    @NotNull(message = "Mission status is required")
+    MissionStatus status, // Добавлено недостающее поле
+
     @NotNull(message = "Priority is required")
     MissionPriority priority,
 
@@ -28,7 +32,6 @@ public record MissionRequestDTO(
     @NotNull(message = "Spacecraft is required")
     Long spacecraftId,
 
-    LocalDateTime scheduledDeparture,
     LocalDateTime scheduledArrival,
 
     // Поля для завершения миссии
