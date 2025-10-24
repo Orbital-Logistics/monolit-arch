@@ -24,6 +24,7 @@ import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +45,9 @@ class CargoManifestServiceTests {
 
     @Mock
     private CargoRepository cargoRepository;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @Mock
     private StorageUnitRepository storageUnitRepository;
@@ -354,7 +358,6 @@ class CargoManifestServiceTests {
 
     @Test
     void unloadCargoFromSpacecraft_ShouldUpdateAllActiveManifests() {
-
         CargoManifestRequestDTO unloadRequest = new CargoManifestRequestDTO(
                 null, null, null, null, null, null,
                 null, null, 2L, null, null, null, null
@@ -373,34 +376,47 @@ class CargoManifestServiceTests {
                 .quantity(100).loadedByUserId(1L).manifestStatus(ManifestStatus.LOADED).build();
 
         CargoManifest activeManifest2 = CargoManifest.builder()
-                .id(2L).spacecraftId(1L).cargoId(1L).storageUnitId(1L)
+                .id(2L).spacecraftId(1L).cargoId(2L).storageUnitId(2L)
                 .quantity(50).loadedByUserId(1L).manifestStatus(ManifestStatus.LOADED).build();
 
         List<CargoManifest> activeManifests = List.of(activeManifest1, activeManifest2);
+
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoManifestRepository.findActiveCargoBySpacecraft(1L)).thenReturn(activeManifests);
         when(userRepository.findById(2L)).thenReturn(Optional.of(unloadUser));
 
-        when(cargoManifestRepository.save(any(CargoManifest.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-
-        when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(cargoRepository.findById(2L)).thenReturn(Optional.of(testCargo));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
+        when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(unloadUser));
-        when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
-                .thenReturn(testResponseDTO);
 
+
+        when(cargoManifestMapper.toResponseDTO(
+                any(CargoManifest.class),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn(testResponseDTO);
 
         List<CargoManifestResponseDTO> result = cargoManifestService.unloadCargoFromSpacecraft(1L, unloadRequest);
 
-
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(cargoManifestRepository, times(2)).save(any(CargoManifest.class));
+
+        verify(cargoManifestRepository, times(1)).findActiveCargoBySpacecraft(1L);
+        verify(jdbcTemplate, times(2)).update(anyString(), any(Object[].class));
+
+        verify(cargoRepository, atLeastOnce()).findById(1L);
+        verify(cargoRepository, atLeastOnce()).findById(2L);
+        verify(storageUnitRepository, atLeastOnce()).findById(1L);
+        verify(storageUnitRepository, atLeastOnce()).findById(2L);
+        verify(userRepository, atLeastOnce()).findById(1L);
+
     }
 
     @Test

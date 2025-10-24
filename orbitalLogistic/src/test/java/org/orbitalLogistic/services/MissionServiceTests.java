@@ -65,6 +65,7 @@ class MissionServiceTests {
     @BeforeEach
     void setUp() {
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime scheduledDeparture = now.plusDays(1);
         LocalDateTime scheduledArrival = now.plusDays(30);
 
         testCommandingOfficer = User.builder()
@@ -90,16 +91,15 @@ class MissionServiceTests {
                 .status(MissionStatus.PLANNING)
                 .commandingOfficerId(1L)
                 .spacecraftId(1L)
-                .scheduledDeparture(now.plusDays(1))
+                .scheduledDeparture(scheduledDeparture)
                 .scheduledArrival(scheduledArrival)
                 .build();
 
         testResponseDTO = new MissionResponseDTO(
                 1L, "MISSION-001", "Exploration Mission", MissionType.SCIENCE_EXPEDITION,
                 MissionStatus.PLANNING, MissionPriority.HIGH, "John Doe", "Enterprise",
-                now.plusDays(1), scheduledArrival
+                scheduledDeparture, scheduledArrival
         );
-
 
         testRequestDTO = new MissionRequestDTO(
                 "MISSION-001",
@@ -110,6 +110,7 @@ class MissionServiceTests {
                 1L,
                 1L,
                 scheduledArrival,
+                scheduledDeparture,
                 null,
                 null,
                 null,
@@ -130,11 +131,11 @@ class MissionServiceTests {
         lenient().when(missionRepository.save(any(Mission.class))).thenReturn(testMission);
     }
 
-
     private MissionRequestDTO createMissionRequestDTO(String missionCode, String missionName,
                                                       MissionType missionType, MissionStatus status,
                                                       MissionPriority priority, Long commandingOfficerId,
-                                                      Long spacecraftId, LocalDateTime scheduledArrival) {
+                                                      Long spacecraftId, LocalDateTime scheduledArrival,
+                                                      LocalDateTime scheduledDeparture) {
         return new MissionRequestDTO(
                 missionCode,
                 missionName,
@@ -144,6 +145,31 @@ class MissionServiceTests {
                 commandingOfficerId,
                 spacecraftId,
                 scheduledArrival,
+                scheduledDeparture,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private MissionRequestDTO createDefaultMissionRequestDTO(String missionCode, String missionName,
+                                                             MissionType missionType, MissionStatus status,
+                                                             MissionPriority priority, Long commandingOfficerId,
+                                                             Long spacecraftId) {
+        LocalDateTime now = LocalDateTime.now();
+        return new MissionRequestDTO(
+                missionCode,
+                missionName,
+                missionType,
+                status,
+                priority,
+                commandingOfficerId,
+                spacecraftId,
+                now.plusDays(30),
+                now.plusDays(1),
                 null,
                 null,
                 null,
@@ -248,15 +274,14 @@ class MissionServiceTests {
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(false);
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        MissionRequestDTO requestWithInvalidOfficer = createMissionRequestDTO(
+        MissionRequestDTO requestWithInvalidOfficer = createDefaultMissionRequestDTO(
                 "MISSION-001",
                 "Exploration Mission",
                 MissionType.SCIENCE_EXPEDITION,
                 MissionStatus.PLANNING,
                 MissionPriority.HIGH,
                 999L,
-                1L,
-                LocalDateTime.now().plusDays(30)
+                1L
         );
 
         DataNotFoundException exception = assertThrows(
@@ -275,15 +300,14 @@ class MissionServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
 
-        MissionRequestDTO requestWithInvalidSpacecraft = createMissionRequestDTO(
+        MissionRequestDTO requestWithInvalidSpacecraft = createDefaultMissionRequestDTO(
                 "MISSION-001",
                 "Exploration Mission",
                 MissionType.SCIENCE_EXPEDITION,
                 MissionStatus.PLANNING,
                 MissionPriority.HIGH,
                 1L,
-                999L,
-                LocalDateTime.now().plusDays(30)
+                999L
         );
 
         DataNotFoundException exception = assertThrows(
@@ -313,6 +337,7 @@ class MissionServiceTests {
     @Test
     void updateMission_WithExistingMissionCode_ShouldThrowException() {
         LocalDateTime newArrival = LocalDateTime.now().plusDays(35);
+        LocalDateTime newDeparture = LocalDateTime.now().plusDays(2);
 
         MissionRequestDTO updateRequest = createMissionRequestDTO(
                 "MISSION-002",
@@ -322,7 +347,8 @@ class MissionServiceTests {
                 MissionPriority.HIGH,
                 1L,
                 1L,
-                newArrival
+                newArrival,
+                newDeparture
         );
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
@@ -387,6 +413,7 @@ class MissionServiceTests {
     @Test
     void updateMission_WithValidId_ShouldUpdateMission() {
         LocalDateTime newArrival = LocalDateTime.now().plusDays(35);
+        LocalDateTime newDeparture = LocalDateTime.now().plusDays(2);
 
         MissionRequestDTO updateRequest = createMissionRequestDTO(
                 "MISSION-001-UPDATED",
@@ -396,7 +423,8 @@ class MissionServiceTests {
                 MissionPriority.HIGH,
                 1L,
                 1L,
-                newArrival
+                newArrival,
+                newDeparture
         );
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
@@ -409,14 +437,12 @@ class MissionServiceTests {
         verify(missionRepository, times(1)).findById(1L);
         verify(missionRepository, times(1)).existsByMissionCode("MISSION-001-UPDATED");
         verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
-
-
-
     }
 
     @Test
     void updateMission_WithSameMissionCode_ShouldNotThrowException() {
         LocalDateTime newArrival = LocalDateTime.now().plusDays(35);
+        LocalDateTime newDeparture = LocalDateTime.now().plusDays(2);
 
         MissionRequestDTO updateRequest = createMissionRequestDTO(
                 "MISSION-001",
@@ -426,7 +452,8 @@ class MissionServiceTests {
                 MissionPriority.HIGH,
                 1L,
                 1L,
-                newArrival
+                newArrival,
+                newDeparture
         );
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
@@ -437,8 +464,5 @@ class MissionServiceTests {
         assertNotNull(result);
         verify(missionRepository, never()).existsByMissionCode(anyString());
         verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
-
-
-
     }
 }
