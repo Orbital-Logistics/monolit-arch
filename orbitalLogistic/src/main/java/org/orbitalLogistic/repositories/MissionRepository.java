@@ -30,9 +30,9 @@ public interface MissionRepository extends CrudRepository<Mission, Long> {
         SELECT m.* FROM mission m 
         WHERE (:missionCode IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', :missionCode, '%')))
         AND (:missionName IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', :missionName, '%')))
-        AND (:status IS NULL OR m.status = :status)
-        AND (:missionType IS NULL OR m.mission_type = :missionType)
-        AND (:priority IS NULL OR m.priority = :priority)
+        AND (:status IS NULL OR m.status = CAST(:status AS mission_status_enum))
+        AND (:missionType IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
+        AND (:priority IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
         AND (:commandingOfficerId IS NULL OR m.commanding_officer_id = :commandingOfficerId)
         AND (:spacecraftId IS NULL OR m.spacecraft_id = :spacecraftId)
         ORDER BY m.scheduled_departure DESC NULLS LAST, m.mission_code
@@ -54,9 +54,9 @@ public interface MissionRepository extends CrudRepository<Mission, Long> {
         SELECT COUNT(*) FROM mission m 
         WHERE (:missionCode IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', :missionCode, '%')))
         AND (:missionName IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', :missionName, '%')))
-        AND (:status IS NULL OR m.status = :status)
-        AND (:missionType IS NULL OR m.mission_type = :missionType)
-        AND (:priority IS NULL OR m.priority = :priority)
+        AND (:status IS NULL OR m.status = CAST(:status AS mission_status_enum))
+        AND (:missionType IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
+        AND (:priority IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
         AND (:commandingOfficerId IS NULL OR m.commanding_officer_id = :commandingOfficerId)
         AND (:spacecraftId IS NULL OR m.spacecraft_id = :spacecraftId)
     """)

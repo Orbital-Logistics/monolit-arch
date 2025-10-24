@@ -27,8 +27,12 @@ public class MissionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        if (size > 50) size = 50;
+
         PageResponseDTO<MissionResponseDTO> response = missionService.getMissions(missionCode, status, missionType, page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 
     @GetMapping("/{id}")
