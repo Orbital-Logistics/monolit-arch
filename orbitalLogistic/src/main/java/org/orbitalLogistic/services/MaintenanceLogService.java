@@ -136,13 +136,13 @@ public class MaintenanceLogService {
         if (maintenanceLog.getSupervisedByUserId() != null) {
             User supervisedByUser = userRepository.findById(maintenanceLog.getSupervisedByUserId()).orElse(null);
             if (supervisedByUser != null) {
-                supervisedByUserName = supervisedByUser.getFirst_name() + " " + supervisedByUser.getLast_name();
+                supervisedByUserName = supervisedByUser.getUsername();
             }
         }
 
         return maintenanceLogMapper.toResponseDTO(maintenanceLog,
                 spacecraft.getName(),
-                performedByUser.getFirst_name() + " " + performedByUser.getLast_name(),
+                performedByUser.getUsername(),
                 supervisedByUserName);
     }
 }

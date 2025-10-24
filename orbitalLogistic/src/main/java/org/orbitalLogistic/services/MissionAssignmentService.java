@@ -125,6 +125,6 @@ public class MissionAssignmentService {
 
         return missionAssignmentMapper.toResponseDTO(assignment,
                 mission.getMissionName(),
-                user.getFirst_name() + " " + user.getLast_name());
+                user.getUsername() + " " + user.getUsername());
     }
 }

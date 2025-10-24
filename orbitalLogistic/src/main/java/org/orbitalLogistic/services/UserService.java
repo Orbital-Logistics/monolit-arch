@@ -28,17 +28,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final UserMapper userMapper;
-
+    private final PasswordEncoder passwordEncoder;
+    
     public UserResponseDTO registerUser(UserRegistrationRequestDTO request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException("User with email already exists");
         }
 
         User user = userMapper.toEntity(request);
-
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
         // Set default USER role
-        UserRole userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new DataNotFoundException("USER role not found"));
+        UserRole userRole = roleRepository.findByName("logistics_officer")
+                .orElseThrow(() -> new DataNotFoundException("logistics_officer role not found"));
         user.setRoleId(userRole.getId());
 
         user = userRepository.save(user);
@@ -46,10 +47,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<UserResponseDTO> getUsers(String email, String name, int page, int size) {
+    public PageResponseDTO<UserResponseDTO> getUsers(String email, String username, int page, int size) {
         int offset = page * size;
-        List<User> users = userRepository.findUsersWithFilters(email, name, size, offset);
-        long total = userRepository.countUsersWithFilters(email, name);
+        List<User> users = userRepository.findUsersWithFilters(email, username, size, offset);
+        long total = userRepository.countUsersWithFilters(email, username);
 
         List<UserResponseDTO> userDTOs = users.stream().map(this::toResponseDTO).toList();
 
@@ -75,7 +76,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (request.username() != null) user.setFirst_name(request.username());
+        if (request.username() != null) user.setUsername(request.username());
 
         user = userRepository.save(user);
         return toResponseDTO(user);
@@ -89,8 +90,6 @@ public class UserService {
     }
 
     private UserResponseDTO toResponseDTO(User user) {
-        String roleName = roleRepository.findById(user.getRoleId())
-                .map(UserRole::getName).orElse("UNKNOWN");
-        return userMapper.toResponseDTO(user, roleName);
+        return userMapper.toResponseDTO(user);
     }
 }

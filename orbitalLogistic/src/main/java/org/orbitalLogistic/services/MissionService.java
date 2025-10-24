@@ -122,7 +122,7 @@ public class MissionService {
                 .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
 
         return missionMapper.toResponseDTO(mission,
-                commandingOfficer.getFirst_name() + " " + commandingOfficer.getLast_name(),
+                commandingOfficer.getUsername() + " " + commandingOfficer.getUsername(),
                 spacecraft.getName());
     }
 }

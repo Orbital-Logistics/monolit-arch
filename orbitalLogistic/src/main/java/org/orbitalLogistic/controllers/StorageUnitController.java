@@ -9,11 +9,13 @@ import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
 import org.orbitalLogistic.services.StorageUnitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/storage-units")
 @RequiredArgsConstructor
+@Validated
 public class StorageUnitController {
 
     private final StorageUnitService storageUnitService;
@@ -22,7 +24,7 @@ public class StorageUnitController {
     public ResponseEntity<PageResponseDTO<StorageUnitResponseDTO>> getAllStorageUnits(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         PageResponseDTO<StorageUnitResponseDTO> response = storageUnitService.getStorageUnits(page, size);
         return ResponseEntity.ok(response);
     }
