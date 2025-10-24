@@ -164,7 +164,8 @@ CREATE TABLE inventory_transaction (
 
 -- Простая M2M: Spacecraft <-> Mission (резервные корабли)
 CREATE TABLE spacecraft_mission (
-    spacecraft_id BIGINT REFERENCES spacecraft(id) ON DELETE CASCADE,
-    mission_id BIGINT REFERENCES mission(id) ON DELETE CASCADE,
-    PRIMARY KEY (spacecraft_id, mission_id)
+    id BIGSERIAL PRIMARY KEY,
+    spacecraft_id BIGINT NOT NULL REFERENCES spacecraft(id) ON DELETE CASCADE,
+    mission_id BIGINT NOT NULL REFERENCES mission(id) ON DELETE CASCADE,
+    UNIQUE (spacecraft_id, mission_id)
 );

@@ -131,9 +131,9 @@
 
 | Метод | Endpoint | Описание | Пагинация |
 |-------|----------|-----------|------------|
-| POST | /api/missions/{id}/backup-spacecraft | Добавить резервный корабль |❌
-| DELETE | /api/missions/{missionId}/backup-spacecraft/{spacecraftId} | Удалить резервный корабль |❌
-| GET | /api/missions/{id}/backup-spacecrafts | Резервные корабли миссии |❌
+| POST | /api/missions/{id}/backup-spacecraft | Добавить резервный корабль |✅
+| DELETE | /api/missions/{missionId}/backup-spacecraft/{spacecraftId} | Удалить резервный корабль |✅
+| GET | /api/missions/{id}/backup-spacecrafts | Резервные корабли миссии |✅
 
 ## 📋 Статусы ответов
 
