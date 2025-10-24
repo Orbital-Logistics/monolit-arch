@@ -242,4 +242,16 @@ public class GlobalExceptionHandler {
         String message,
         Map<String, String> details
     ) {}
+
+    @ExceptionHandler(UserAlreadyAssignedException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyAssignedException(UserAlreadyAssignedException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            "Conflict",
+            ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
 }
