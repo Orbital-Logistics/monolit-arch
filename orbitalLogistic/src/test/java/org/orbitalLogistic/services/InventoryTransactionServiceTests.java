@@ -77,8 +77,10 @@ class InventoryTransactionServiceTests {
 
         testUser = User.builder()
                 .id(1L)
-                .first_name("John")
-                .last_name("Doe")
+                .email("john.doe@example.com")
+                .username("John Doe")
+                .roleId(1L)
+                .passwordHash("encodedPassword")
                 .build();
 
         testStorageUnit = StorageUnit.builder()
@@ -118,7 +120,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getAllTransactions_WithValidParameters_ShouldReturnPageResponse() {
-        
+
         List<InventoryTransaction> transactions = List.of(testTransaction);
         when(inventoryTransactionRepository.count()).thenReturn(1L);
         when(inventoryTransactionRepository.findAll()).thenReturn(transactions);
@@ -126,14 +128,14 @@ class InventoryTransactionServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getAllTransactions(0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -146,14 +148,14 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getAllTransactions_WithNoTransactions_ShouldReturnEmptyPage() {
-        
+
         when(inventoryTransactionRepository.count()).thenReturn(0L);
         when(inventoryTransactionRepository.findAll()).thenReturn(List.of());
 
-        
+
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getAllTransactions(0, 20);
 
-        
+
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -163,20 +165,20 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getTransactionById_WithValidId_ShouldReturnTransaction() {
-        
+
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        
+
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("Scientific Equipment", result.cargoName());
@@ -186,10 +188,10 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getTransactionById_WithInvalidId_ShouldThrowException() {
-        
+
         when(inventoryTransactionRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         InventoryTransactionNotFoundException exception = assertThrows(
                 InventoryTransactionNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(999L)
@@ -201,21 +203,21 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getCargoHistory_WithValidCargoId_ShouldReturnPageResponse() {
-        
+
         List<InventoryTransaction> transactions = List.of(testTransaction);
         when(inventoryTransactionRepository.findByCargoIdOrderByTransactionDate(1L)).thenReturn(transactions);
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getCargoHistory(1L, 0, 20);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals(0, result.currentPage());
@@ -227,13 +229,13 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getCargoHistory_WithNoTransactions_ShouldReturnEmptyPage() {
-        
+
         when(inventoryTransactionRepository.findByCargoIdOrderByTransactionDate(1L)).thenReturn(List.of());
 
-        
+
         PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getCargoHistory(1L, 0, 20);
 
-        
+
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
         assertEquals(0, result.totalElements());
@@ -242,16 +244,15 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithNullStorageUnits_ShouldThrowException() {
-        
+
         InventoryTransactionRequestDTO requestWithNullStorages = new InventoryTransactionRequestDTO(
                 TransactionType.TRANSFER, 1L, 100, null, null, null, null, 1L, "TRANSFER", "REF-001", "Invalid transfer"
         );
 
-        
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithNullStorages)
@@ -263,14 +264,14 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidCargo_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
         InventoryTransactionRequestDTO requestWithInvalidCargo = new InventoryTransactionRequestDTO(
                 TransactionType.TRANSFER, 999L, 100, 1L, 2L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidCargo)
@@ -283,7 +284,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidUser_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -291,7 +292,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 1L, 2L, null, null, 999L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidUser)
@@ -304,7 +305,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidFromStorage_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
@@ -313,7 +314,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 999L, 2L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidFromStorage)
@@ -326,7 +327,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void transferBetweenStorages_WithInvalidToStorage_ShouldThrowException() {
-        
+
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
@@ -336,7 +337,7 @@ class InventoryTransactionServiceTests {
                 TransactionType.TRANSFER, 1L, 100, 1L, 999L, null, null, 1L, "TRANSFER", "REF-001", "Transfer"
         );
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.transferBetweenStorages(requestWithInvalidToStorage)
@@ -349,20 +350,20 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithStorageUnit_ShouldReturnStorageLocation() {
-        
+
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        
+
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals("Storage: SU-001", result.fromLocation());
         assertEquals("Storage: SU-002", result.toLocation());
@@ -372,7 +373,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithSpacecraft_ShouldReturnSpacecraftLocation() {
-        
+
         InventoryTransaction spacecraftTransaction = InventoryTransaction.builder()
                 .id(2L)
                 .cargoId(1L)
@@ -384,7 +385,6 @@ class InventoryTransactionServiceTests {
                 .transactionDate(LocalDateTime.now())
                 .build();
 
-        
         InventoryTransactionResponseDTO spacecraftResponseDTO = new InventoryTransactionResponseDTO(
                 2L, TransactionType.TRANSFER, "Scientific Equipment", 100,
                 "Spacecraft: Enterprise", "Spacecraft: Enterprise", "John Doe",
@@ -396,14 +396,14 @@ class InventoryTransactionServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftRepository.findById(2L)).thenReturn(Optional.of(testSpacecraft));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(spacecraftResponseDTO);
 
-        
+
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(2L);
 
-        
+
         assertNotNull(result);
         assertEquals("Spacecraft: Enterprise", result.fromLocation());
         assertEquals("Spacecraft: Enterprise", result.toLocation());
@@ -413,7 +413,7 @@ class InventoryTransactionServiceTests {
 
     @Test
     void getLocationName_WithUnknownLocation_ShouldReturnUnknown() {
-        
+
         InventoryTransaction unknownTransaction = InventoryTransaction.builder()
                 .id(3L)
                 .cargoId(1L)
@@ -427,7 +427,6 @@ class InventoryTransactionServiceTests {
                 .transactionDate(LocalDateTime.now())
                 .build();
 
-        
         InventoryTransactionResponseDTO unknownResponseDTO = new InventoryTransactionResponseDTO(
                 3L, TransactionType.TRANSFER, "Scientific Equipment", 100,
                 "Unknown Location", "Unknown Location", "John Doe",
@@ -437,14 +436,14 @@ class InventoryTransactionServiceTests {
         when(inventoryTransactionRepository.findById(3L)).thenReturn(Optional.of(unknownTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        
+
         when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(unknownResponseDTO);
 
-        
+
         InventoryTransactionResponseDTO result = inventoryTransactionService.getTransactionById(3L);
 
-        
+
         assertNotNull(result);
         assertEquals("Unknown Location", result.fromLocation());
         assertEquals("Unknown Location", result.toLocation());
@@ -452,11 +451,11 @@ class InventoryTransactionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidCargo_ShouldThrowException() {
-        
+
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(1L)
@@ -468,12 +467,12 @@ class InventoryTransactionServiceTests {
 
     @Test
     void toResponseDTO_WithInvalidUser_ShouldThrowException() {
-        
+
         when(inventoryTransactionRepository.findById(1L)).thenReturn(Optional.of(testTransaction));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        
+
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
                 () -> inventoryTransactionService.getTransactionById(1L)
@@ -481,5 +480,46 @@ class InventoryTransactionServiceTests {
 
         assertEquals("User not found", exception.getMessage());
         verify(userRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void createInventoryTransaction_WithValidRequest_ShouldSaveTransaction() {
+
+        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
+        when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
+
+
+        when(inventoryTransactionMapper.toEntity(testRequestDTO)).thenReturn(testTransaction);
+        when(inventoryTransactionRepository.save(any(InventoryTransaction.class))).thenReturn(testTransaction);
+        when(inventoryTransactionMapper.toResponseDTO(any(InventoryTransaction.class), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(testResponseDTO);
+
+
+        InventoryTransactionResponseDTO result = inventoryTransactionService.transferBetweenStorages(testRequestDTO);
+
+
+        assertNotNull(result);
+        assertEquals(1L, result.id());
+        verify(inventoryTransactionRepository, times(1)).save(any(InventoryTransaction.class));
+    }
+
+    @Test
+    void getAllTransactions_WithPagination_ShouldReturnCorrectPage() {
+
+        List<InventoryTransaction> transactions = List.of(testTransaction);
+        when(inventoryTransactionRepository.count()).thenReturn(5L);
+        when(inventoryTransactionRepository.findAll()).thenReturn(transactions);
+
+
+        PageResponseDTO<InventoryTransactionResponseDTO> result = inventoryTransactionService.getAllTransactions(1, 2);
+
+
+        assertNotNull(result);
+        assertEquals(1, result.currentPage());
+        assertEquals(2, result.pageSize());
+        assertEquals(5, result.totalElements());
+        assertEquals(3, result.totalPages());
     }
 }

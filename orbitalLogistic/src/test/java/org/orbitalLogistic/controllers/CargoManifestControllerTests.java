@@ -52,19 +52,19 @@ class CargoManifestControllerTests {
         );
 
         testManifestRequest = new CargoManifestRequestDTO(
-                1L,                        
-                2L,                        
-                3L,                        
-                42,                        
-                ManifestPriority.HIGH,     
-                10L,                       
-                List.of(),                 
-                4L,                        
-                null,                      
-                LocalDateTime.now(),       
-                null,                      
-                "LOAD",                    
-                "Initial load operation"   
+                1L,
+                2L,
+                3L,
+                42,
+                ManifestPriority.HIGH,
+                10L,
+                List.of(),
+                4L,
+                null,
+                LocalDateTime.now(),
+                null,
+                "LOAD",
+                "Initial load operation"
         );
 
         testPageResponse = new PageResponseDTO<>(

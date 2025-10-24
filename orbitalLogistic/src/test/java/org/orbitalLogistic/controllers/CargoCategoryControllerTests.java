@@ -51,13 +51,13 @@ class CargoCategoryControllerTests {
 
     @Test
     void getAllCategories_ShouldReturnListOfCategories() {
-        
+
         when(cargoCategoryService.getAllCategories()).thenReturn(List.of(testCategoryResponse));
 
-        
+
         ResponseEntity<List<CargoCategoryResponseDTO>> response = cargoCategoryController.getAllCategories();
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -68,13 +68,13 @@ class CargoCategoryControllerTests {
 
     @Test
     void getCategoryById_ShouldReturnCategory() {
-        
+
         when(cargoCategoryService.getCategoryById(1L)).thenReturn(testCategoryResponse);
 
-        
+
         ResponseEntity<CargoCategoryResponseDTO> response = cargoCategoryController.getCategoryById(1L);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -84,11 +84,11 @@ class CargoCategoryControllerTests {
 
     @Test
     void getCategoryById_WithInvalidId_ShouldPropagateException() {
-        
+
         when(cargoCategoryService.getCategoryById(999L))
                 .thenThrow(new IllegalArgumentException("Category not found with id: 999"));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> cargoCategoryController.getCategoryById(999L)
@@ -100,13 +100,13 @@ class CargoCategoryControllerTests {
 
     @Test
     void createCategory_ShouldReturnCreatedResponse() {
-        
+
         when(cargoCategoryService.createCategory(testCategoryRequest)).thenReturn(testCategoryResponse);
 
-        
+
         ResponseEntity<CargoCategoryResponseDTO> response = cargoCategoryController.createCategory(testCategoryRequest);
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -116,11 +116,11 @@ class CargoCategoryControllerTests {
 
     @Test
     void createCategory_WithExistingName_ShouldPropagateException() {
-        
+
         when(cargoCategoryService.createCategory(testCategoryRequest))
                 .thenThrow(new IllegalArgumentException("Category with name already exists: Scientific Equipment"));
 
-        
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> cargoCategoryController.createCategory(testCategoryRequest)
@@ -132,7 +132,7 @@ class CargoCategoryControllerTests {
 
     @Test
     void getCategoryTree_ShouldReturnNestedCategories() {
-        
+
         CargoCategoryResponseDTO childCategory = new CargoCategoryResponseDTO(
                 2L,
                 "Subcategory A",
@@ -155,10 +155,10 @@ class CargoCategoryControllerTests {
 
         when(cargoCategoryService.getCategoryTree()).thenReturn(List.of(parentCategory));
 
-        
+
         ResponseEntity<List<CargoCategoryResponseDTO>> response = cargoCategoryController.getCategoryTree();
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
@@ -170,13 +170,13 @@ class CargoCategoryControllerTests {
 
     @Test
     void getCategoryTree_WithNoCategories_ShouldReturnEmptyList() {
-        
+
         when(cargoCategoryService.getCategoryTree()).thenReturn(List.of());
 
-        
+
         ResponseEntity<List<CargoCategoryResponseDTO>> response = cargoCategoryController.getCategoryTree();
 
-        
+
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isEmpty());
