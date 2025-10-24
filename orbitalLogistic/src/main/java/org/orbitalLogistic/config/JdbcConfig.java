@@ -37,8 +37,6 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
             // Spacecraft
             new EnumToStringConverter.SpacecraftStatusEnumToString(),
             new EnumToStringConverter.StringToSpacecraftStatusEnum(),
-            // new EnumToStringConverter.SpacecraftClassificationEnumToString(),
-            // new EnumToStringConverter.StringToSpacecraftClassificationEnum(),
 
             // Storage
             new EnumToStringConverter.StorageTypeEnumToString(),
@@ -54,29 +52,31 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
             new EnumToStringConverter.MissionTypeEnumToString(),
             new EnumToStringConverter.StringToMissionTypeEnum(),
             new EnumToStringConverter.MissionStatusEnumToString(),
-            new EnumToStringConverter.StringToMissionStatusEnum()
-            // new EnumToStringConverter.MissionPriorityEnumToString(),
-            // new EnumToStringConverter.StringToMissionPriorityEnum(),
+            new EnumToStringConverter.StringToMissionStatusEnum(),
 
-            // // Assignment
-            // new EnumToStringConverter.AssignmentRoleEnumToString(),
-            // new EnumToStringConverter.StringToAssignmentRoleEnum(),
+            // Transaction
+            new EnumToStringConverter.TransactionTypeEnumToString(),
+            new EnumToStringConverter.StringToTransactionTypeEnum(),
 
-            // // Maintenance
-            // new EnumToStringConverter.MaintenanceTypeEnumToString(),
-            // new EnumToStringConverter.StringToMaintenanceTypeEnum(),
-            // new EnumToStringConverter.MaintenanceStatusEnumToString(),
-            // new EnumToStringConverter.StringToMaintenanceStatusEnum(),
+            // Manifest
+            new EnumToStringConverter.ManifestStatusEnumToString(),
+            new EnumToStringConverter.StringToManifestStatusEnum(),
+            new EnumToStringConverter.ManifestPriorityEnumToString(),
+            new EnumToStringConverter.StringToManifestPriorityEnum(),
 
-            // // Transaction
-            // new EnumToStringConverter.TransactionTypeEnumToString(),
-            // new EnumToStringConverter.StringToTransactionTypeEnum(),
+            // Maintenance
+            new EnumToStringConverter.MaintenanceTypeEnumToString(),
+            new EnumToStringConverter.StringToMaintenanceTypeEnum(),
+            new EnumToStringConverter.MaintenanceStatusEnumToString(),
+            new EnumToStringConverter.StringToMaintenanceStatusEnum(),
 
-            // // Manifest
-            // new EnumToStringConverter.ManifestStatusEnumToString(),
-            // new EnumToStringConverter.StringToManifestStatusEnum(),
-            // new EnumToStringConverter.ManifestPriorityEnumToString(),
-            // new EnumToStringConverter.StringToManifestPriorityEnum()
+            // Assignment
+            new EnumToStringConverter.AssignmentRoleEnumToString(),
+            new EnumToStringConverter.StringToAssignmentRoleEnum(),
+
+            // Mission Priority
+            new EnumToStringConverter.MissionPriorityEnumToString(),
+            new EnumToStringConverter.StringToMissionPriorityEnum()
         );
     }
 }
