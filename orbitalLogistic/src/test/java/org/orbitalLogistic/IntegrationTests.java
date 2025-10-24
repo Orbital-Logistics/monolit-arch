@@ -2,7 +2,6 @@ package org.orbitalLogistic;
 
 import org.junit.jupiter.api.Test;
 import org.orbitalLogistic.entities.*;
-import org.orbitalLogistic.entities.enums.*;
 import org.orbitalLogistic.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
