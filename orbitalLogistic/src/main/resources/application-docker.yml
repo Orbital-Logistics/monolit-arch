@@ -6,7 +6,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://db:5432/orbitalLogistic
+    url: jdbc:postgresql://db:5432/orbitalLogistic?stringtype=unspecified
     username: postgres
     password: postgres_pass
 
