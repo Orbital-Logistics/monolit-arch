@@ -31,7 +31,7 @@ public interface InventoryTransactionRepository extends CrudRepository<Inventory
 
     @Query("""
         SELECT it.* FROM inventory_transaction it
-        WHERE (:transactionType IS NULL OR it.transaction_type = :transactionType)
+        WHERE (:transactionType IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
         AND (:cargoId IS NULL OR it.cargo_id = :cargoId)
         AND (:performedByUserId IS NULL OR it.performed_by_user_id = :performedByUserId)
         AND (:fromStorageUnitId IS NULL OR it.from_storage_unit_id = :fromStorageUnitId)
@@ -57,7 +57,7 @@ public interface InventoryTransactionRepository extends CrudRepository<Inventory
 
     @Query("""
         SELECT COUNT(*) FROM inventory_transaction it
-        WHERE (:transactionType IS NULL OR it.transaction_type = :transactionType)
+        WHERE (:transactionType IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
         AND (:cargoId IS NULL OR it.cargo_id = :cargoId)
         AND (:performedByUserId IS NULL OR it.performed_by_user_id = :performedByUserId)
         AND (:fromStorageUnitId IS NULL OR it.from_storage_unit_id = :fromStorageUnitId)

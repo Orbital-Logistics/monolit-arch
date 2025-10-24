@@ -37,8 +37,8 @@ public interface CargoManifestRepository extends CrudRepository<CargoManifest, L
         WHERE (:spacecraftId IS NULL OR cm.spacecraft_id = :spacecraftId)
         AND (:cargoId IS NULL OR cm.cargo_id = :cargoId)
         AND (:storageUnitId IS NULL OR cm.storage_unit_id = :storageUnitId)
-        AND (:manifestStatus IS NULL OR cm.manifest_status = :manifestStatus)
-        AND (:priority IS NULL OR cm.priority = :priority)
+        AND (:manifestStatus IS NULL OR cm.manifest_status = CAST(:manifestStatus AS manifest_status_enum))
+        AND (:priority IS NULL OR cm.priority = CAST(:priority AS manifest_priority_enum))
         AND (:loadedByUserId IS NULL OR cm.loaded_by_user_id = :loadedByUserId)
         ORDER BY cm.priority DESC, cm.loaded_at DESC NULLS LAST
         LIMIT :limit OFFSET :offset
@@ -59,8 +59,8 @@ public interface CargoManifestRepository extends CrudRepository<CargoManifest, L
         WHERE (:spacecraftId IS NULL OR cm.spacecraft_id = :spacecraftId)
         AND (:cargoId IS NULL OR cm.cargo_id = :cargoId)
         AND (:storageUnitId IS NULL OR cm.storage_unit_id = :storageUnitId)
-        AND (:manifestStatus IS NULL OR cm.manifest_status = :manifestStatus)
-        AND (:priority IS NULL OR cm.priority = :priority)
+        AND (:manifestStatus IS NULL OR cm.manifest_status = CAST(:manifestStatus AS manifest_status_enum))
+        AND (:priority IS NULL OR cm.priority = CAST(:priority AS manifest_priority_enum))
         AND (:loadedByUserId IS NULL OR cm.loaded_by_user_id = :loadedByUserId)
     """)
     long countWithFilters(

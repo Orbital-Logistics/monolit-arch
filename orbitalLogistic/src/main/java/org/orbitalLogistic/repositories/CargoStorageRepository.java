@@ -28,8 +28,7 @@ public interface CargoStorageRepository extends CrudRepository<CargoStorage, Lon
     List<CargoStorage> findByStorageUnitIdOrderByStoredAt(@Param("storageUnitId") Long storageUnitId);
 
     @Query("""
-        SELECT cs.*, c.name as cargo_name, su.unit_code, su.location
-        FROM cargo_storage cs
+        SELECT cs.* FROM cargo_storage cs
         INNER JOIN cargo c ON cs.cargo_id = c.id
         INNER JOIN storage_unit su ON cs.storage_unit_id = su.id
         WHERE (:storageUnitId IS NULL OR cs.storage_unit_id = :storageUnitId)
