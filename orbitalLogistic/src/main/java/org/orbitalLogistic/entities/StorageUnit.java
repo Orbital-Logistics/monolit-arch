@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
-import org.orbitalLogistic.entities.enums.StorageType;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
 
 import java.math.BigDecimal;
 
@@ -31,7 +31,7 @@ public class StorageUnit {
     private String location;
 
     @NotNull
-    private StorageType storageType;
+    private StorageTypeEnum storageType;
 
     @NotNull
     @DecimalMin(value = "0.0", inclusive = false, message = "Total mass capacity must be positive")

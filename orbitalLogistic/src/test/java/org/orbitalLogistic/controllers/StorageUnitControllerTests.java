@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
-import org.orbitalLogistic.entities.enums.StorageType;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
 import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
 import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.orbitalLogistic.services.StorageUnitService;
@@ -39,7 +39,7 @@ class StorageUnitControllerTests {
     @BeforeEach
     void setUp() {
         testStorageUnitResponse = new StorageUnitResponseDTO(
-                1L, "SU-001", "Warehouse A", StorageType.AMBIENT,
+                1L, "SU-001", "Warehouse A", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0),
                 BigDecimal.valueOf(200.0), BigDecimal.valueOf(100.0),
                 BigDecimal.valueOf(800.0), BigDecimal.valueOf(400.0),
@@ -47,7 +47,7 @@ class StorageUnitControllerTests {
         );
 
         testStorageUnitRequest = new StorageUnitRequestDTO(
-                "SU-001", "Warehouse A", StorageType.AMBIENT
+                "SU-001", "Warehouse A", StorageTypeEnum.AMBIENT
                 ,
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0)
         );
@@ -190,7 +190,7 @@ class StorageUnitControllerTests {
     void updateStorageUnit_WithValidId_ShouldReturnUpdatedStorageUnit() {
         
         StorageUnitResponseDTO updatedStorageUnit = new StorageUnitResponseDTO(
-                1L, "SU-001-UPDATED", "Warehouse B", StorageType.AMBIENT,
+                1L, "SU-001-UPDATED", "Warehouse B", StorageTypeEnum.AMBIENT,
                 BigDecimal.valueOf(1200.0), BigDecimal.valueOf(600.0),
                 BigDecimal.valueOf(200.0), BigDecimal.valueOf(100.0),
                 BigDecimal.valueOf(1000.0), BigDecimal.valueOf(500.0),
@@ -208,7 +208,7 @@ class StorageUnitControllerTests {
         assertNotNull(response.getBody());
         assertEquals("SU-001-UPDATED", response.getBody().unitCode());
         assertEquals("Warehouse B", response.getBody().location());
-        assertEquals(StorageType.AMBIENT, response.getBody().storageType());
+        assertEquals(StorageTypeEnum.AMBIENT, response.getBody().storageType());
         verify(storageUnitService, times(1)).updateStorageUnit(1L, testStorageUnitRequest);
     }
 

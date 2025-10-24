@@ -1,7 +1,7 @@
 package org.orbitalLogistic.dto.request;
 
 import jakarta.validation.constraints.*;
-import org.orbitalLogistic.entities.enums.StorageType;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
 
 import java.math.BigDecimal;
 
@@ -15,7 +15,7 @@ public record StorageUnitRequestDTO(
     String location,
 
     @NotNull
-    StorageType storageType,
+    StorageTypeEnum storageType, 
 
     @NotNull
     @DecimalMin("0.01")
