@@ -24,6 +24,8 @@ public class CargoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        if (size > 50) size = 50;
+
         List<CargoResponseDTO> response = cargoService.getCargosScroll(page, size);
         return ResponseEntity.ok(response);
     }
@@ -36,8 +38,12 @@ public class CargoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        if (size > 50) size = 50;
+
         PageResponseDTO<CargoResponseDTO> response = cargoService.getCargosPaged(name, cargoType, hazardLevel, page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 
     @GetMapping("/{id}")
@@ -75,7 +81,11 @@ public class CargoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        if (size > 50) size = 50;
+
         PageResponseDTO<CargoResponseDTO> response = cargoService.searchCargos(name, cargoType, hazardLevel, page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(response.totalElements()))
+                .body(response);
     }
 }
