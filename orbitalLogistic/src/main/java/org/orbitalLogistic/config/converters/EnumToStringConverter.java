@@ -8,7 +8,6 @@ import org.orbitalLogistic.entities.enums.*;
 
 public class EnumToStringConverter {
 
-    // Spacecraft Status
     @WritingConverter
     public static class SpacecraftStatusEnumToString implements Converter<SpacecraftStatus, String> {
         @Override
@@ -25,7 +24,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Storage Type
     @WritingConverter
     public static class StorageTypeEnumToString implements Converter<StorageTypeEnum, String> {
         @Override
@@ -42,7 +40,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Cargo Type
     @WritingConverter
     public static class CargoTypeEnumToString implements Converter<CargoType, String> {
         @Override
@@ -59,7 +56,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Hazard Level
     @WritingConverter
     public static class HazardLevelEnumToString implements Converter<HazardLevel, String> {
         @Override
@@ -76,7 +72,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Mission Type
     @WritingConverter
     public static class MissionTypeEnumToString implements Converter<MissionType, String> {
         @Override
@@ -93,7 +88,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Mission Status
     @WritingConverter
     public static class MissionStatusEnumToString implements Converter<MissionStatus, String> {
         @Override
@@ -110,7 +104,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Transaction Type
     @WritingConverter
     public static class TransactionTypeEnumToString implements Converter<TransactionType, String> {
         @Override
@@ -127,7 +120,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Manifest Status
     @WritingConverter
     public static class ManifestStatusEnumToString implements Converter<ManifestStatus, String> {
         @Override
@@ -144,7 +136,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Manifest Priority
     @WritingConverter
     public static class ManifestPriorityEnumToString implements Converter<ManifestPriority, String> {
         @Override
@@ -161,7 +152,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Maintenance Type
     @WritingConverter
     public static class MaintenanceTypeEnumToString implements Converter<MaintenanceType, String> {
         @Override
@@ -178,7 +168,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Maintenance Status
     @WritingConverter
     public static class MaintenanceStatusEnumToString implements Converter<MaintenanceStatus, String> {
         @Override
@@ -195,7 +184,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Assignment Role
     @WritingConverter
     public static class AssignmentRoleEnumToString implements Converter<AssignmentRole, String> {
         @Override
@@ -212,7 +200,6 @@ public class EnumToStringConverter {
         }
     }
 
-    // Mission Priority
     @WritingConverter
     public static class MissionPriorityEnumToString implements Converter<MissionPriority, String> {
         @Override

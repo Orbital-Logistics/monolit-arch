@@ -28,7 +28,6 @@ public record MaintenanceLogRequestDTO(
     @Digits(integer = 8, fraction = 2, message = "Cost format invalid")
     BigDecimal cost,
 
-    // Поля для завершения ТО
     SpacecraftStatus newSpacecraftStatus,
     BigDecimal finalCost,
     String completionNotes,

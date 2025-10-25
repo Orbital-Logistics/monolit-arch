@@ -34,14 +34,12 @@ public record MissionRequestDTO(
 
     LocalDateTime scheduledArrival,
 
-    // Поля для завершения миссии
     LocalDateTime actualArrival,
     Long completedByUserId,
     String completionNotes,
     Boolean isSuccessful,
     String failureReason,
 
-    // Поля для операции загрузки и запуска
     List<CargoItemDTO> cargoItems
 ) {
     public record CargoItemDTO(
