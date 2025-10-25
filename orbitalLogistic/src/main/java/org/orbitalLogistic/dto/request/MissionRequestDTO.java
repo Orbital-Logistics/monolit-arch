@@ -32,8 +32,13 @@ public record MissionRequestDTO(
     @NotNull(message = "Spacecraft is required")
     Long spacecraftId,
 
+    @NotNull
     LocalDateTime scheduledArrival,
 
+    @NotNull
+    LocalDateTime scheduledDeparture,
+
+    // Поля для завершения миссии
     LocalDateTime actualArrival,
     Long completedByUserId,
     String completionNotes,

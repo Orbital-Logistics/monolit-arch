@@ -46,12 +46,12 @@ class CargoStorageControllerTests {
         );
 
         testStorageRequest = new CargoStorageRequestDTO(
-                200L,            
-                100L,            
-                50,              
-                999L,            
-                "Initial stock", 
-                "ADD"            
+                200L,
+                100L,
+                50,
+                999L,
+                "Initial stock",
+                "ADD"
         );
     }
 

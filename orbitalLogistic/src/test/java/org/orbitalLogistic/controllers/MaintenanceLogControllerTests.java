@@ -52,18 +52,18 @@ class MaintenanceLogControllerTests {
         );
 
         testMaintenanceRequest = new MaintenanceLogRequestDTO(
-                1L,                              
-                MaintenanceType.ROUTINE,          
-                100L,                             
-                200L,                             
-                LocalDateTime.of(2025, 1, 10, 10, 0), 
-                LocalDateTime.of(2025, 1, 10, 15, 0), 
-                "Checking life support systems",  
-                new BigDecimal("900.00"),         
-                SpacecraftStatus.DOCKED,          
-                new BigDecimal("950.00"),         
-                "All systems operational",        
-                300L                              
+                1L,
+                MaintenanceType.ROUTINE,
+                100L,
+                200L,
+                LocalDateTime.of(2025, 1, 10, 10, 0),
+                LocalDateTime.of(2025, 1, 10, 15, 0),
+                "Checking life support systems",
+                new BigDecimal("900.00"),
+                SpacecraftStatus.DOCKED,
+                new BigDecimal("950.00"),
+                "All systems operational",
+                300L
         );
     }
 

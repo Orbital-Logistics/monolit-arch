@@ -18,6 +18,7 @@ import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.UserMapper;
 import org.orbitalLogistic.repositories.UserRepository;
 import org.orbitalLogistic.repositories.UserRoleRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -148,6 +149,7 @@ class UserServiceTests {
         assertEquals("User with email already exists", exception.getMessage());
         verify(userRepository, times(1)).existsByEmail("jane.doe@example.com");
         verify(userRepository, never()).save(any());
+        verify(passwordEncoder, never()).encode(any());
     }
 
     @Test

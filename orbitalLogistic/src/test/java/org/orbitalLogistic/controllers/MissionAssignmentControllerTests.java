@@ -46,11 +46,11 @@ class MissionAssignmentControllerTests {
         );
 
         testAssignmentRequest = new MissionAssignmentRequestDTO(
-                101L,                     
-                10L,                      
-                AssignmentRole.ENGINEER,  
-                "Propulsion systems",     
-                null                       
+                101L,
+                10L,
+                AssignmentRole.ENGINEER,
+                "Propulsion systems",
+                null
         );
     }
 

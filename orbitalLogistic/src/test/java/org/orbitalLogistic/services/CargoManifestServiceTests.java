@@ -24,6 +24,7 @@ import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +45,9 @@ class CargoManifestServiceTests {
 
     @Mock
     private CargoRepository cargoRepository;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
 
     @Mock
     private StorageUnitRepository storageUnitRepository;
@@ -84,8 +88,10 @@ class CargoManifestServiceTests {
 
         testUser = User.builder()
                 .id(1L)
-                .first_name("John")
-                .last_name("Doe")
+                .email("john.doe@example.com")
+                .username("John Doe")
+                .roleId(1L)
+                .passwordHash("encodedPassword")
                 .build();
 
         testManifest = CargoManifest.builder()
@@ -114,18 +120,18 @@ class CargoManifestServiceTests {
 
     @Test
     void getAllManifests_ShouldReturnPageResponse() {
-        
+
         List<CargoManifest> manifests = List.of(testManifest);
         when(cargoManifestRepository.count()).thenReturn(1L);
         when(cargoManifestRepository.findAll()).thenReturn(manifests);
 
-        
         setupCommonMocks();
         when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
                 .thenReturn(testResponseDTO);
 
-        
+
         PageResponseDTO<CargoManifestResponseDTO> result = cargoManifestService.getAllManifests(0, 10);
+
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
@@ -136,10 +142,13 @@ class CargoManifestServiceTests {
 
     @Test
     void getAllManifests_WhenNoManifests_ShouldReturnEmptyPage() {
+
         when(cargoManifestRepository.count()).thenReturn(0L);
         when(cargoManifestRepository.findAll()).thenReturn(List.of());
 
+
         PageResponseDTO<CargoManifestResponseDTO> result = cargoManifestService.getAllManifests(0, 10);
+
 
         assertNotNull(result);
         assertTrue(result.content().isEmpty());
@@ -148,16 +157,16 @@ class CargoManifestServiceTests {
 
     @Test
     void getManifestById_WithValidId_ShouldReturnManifest() {
-        
+
         when(cargoManifestRepository.findById(1L)).thenReturn(Optional.of(testManifest));
         setupCommonMocks();
         when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
                 .thenReturn(testResponseDTO);
 
-        
+
         CargoManifestResponseDTO result = cargoManifestService.getManifestById(1L);
 
-        
+
         assertNotNull(result);
         assertEquals(1L, result.id());
         verify(cargoManifestRepository, times(1)).findById(1L);
@@ -165,10 +174,10 @@ class CargoManifestServiceTests {
 
     @Test
     void getManifestById_WithInvalidId_ShouldThrowException() {
-        
+
         when(cargoManifestRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         assertThrows(CargoManifestNotFoundException.class,
                 () -> cargoManifestService.getManifestById(999L));
 
@@ -177,14 +186,16 @@ class CargoManifestServiceTests {
 
     @Test
     void getSpacecraftManifest_ShouldReturnSpacecraftManifests() {
-        
+
         List<CargoManifest> manifests = List.of(testManifest);
         when(cargoManifestRepository.findBySpacecraftIdOrderByPriorityAndLoadedAt(1L)).thenReturn(manifests);
         setupCommonMocks();
         when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
                 .thenReturn(testResponseDTO);
-        
+
+
         PageResponseDTO<CargoManifestResponseDTO> result = cargoManifestService.getSpacecraftManifest(1L, 0, 10);
+
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
@@ -193,7 +204,7 @@ class CargoManifestServiceTests {
 
     @Test
     void loadCargoToSpacecraft_WithSingleCargo_ShouldCreateManifest() {
-        
+
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
@@ -205,10 +216,10 @@ class CargoManifestServiceTests {
         when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
                 .thenReturn(testResponseDTO);
 
-        
+
         List<CargoManifestResponseDTO> result = cargoManifestService.loadCargoToSpacecraft(1L, testRequestDTO);
 
-        
+
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(cargoManifestRepository, times(1)).save(testManifest);
@@ -216,7 +227,7 @@ class CargoManifestServiceTests {
 
     @Test
     void loadCargoToSpacecraft_WithMultipleCargoItems_ShouldCreateMultipleManifests() {
-        
+
         CargoManifestRequestDTO.CargoItemDTO item1 = new CargoManifestRequestDTO.CargoItemDTO(1L, 1L, 100, ManifestPriority.HIGH);
         CargoManifestRequestDTO.CargoItemDTO item2 = new CargoManifestRequestDTO.CargoItemDTO(2L, 2L, 50, ManifestPriority.NORMAL);
 
@@ -233,8 +244,6 @@ class CargoManifestServiceTests {
         when(cargoRepository.findById(2L)).thenReturn(Optional.of(cargo2));
         when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(storageUnit2));
-
-        
         when(userRepository.findById(any())).thenReturn(Optional.of(testUser));
 
         CargoManifest manifest1 = CargoManifest.builder()
@@ -260,15 +269,14 @@ class CargoManifestServiceTests {
         when(cargoManifestRepository.save(any(CargoManifest.class)))
                 .thenReturn(manifest1, manifest2);
 
-        
         when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
-                .thenReturn(testResponseDTO) 
-                .thenReturn(testResponseDTO); 
+                .thenReturn(testResponseDTO)
+                .thenReturn(testResponseDTO);
 
-        
+
         List<CargoManifestResponseDTO> result = cargoManifestService.loadCargoToSpacecraft(1L, multiItemRequest);
 
-        
+
         assertNotNull(result);
         assertEquals(2, result.size());
         verify(cargoManifestRepository, times(2)).save(any(CargoManifest.class));
@@ -277,10 +285,10 @@ class CargoManifestServiceTests {
 
     @Test
     void loadCargoToSpacecraft_WithInvalidSpacecraft_ShouldThrowException() {
-        
+
         when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         assertThrows(DataNotFoundException.class,
                 () -> cargoManifestService.loadCargoToSpacecraft(999L, testRequestDTO));
 
@@ -290,7 +298,7 @@ class CargoManifestServiceTests {
 
     @Test
     void loadCargoToSpacecraft_WithInvalidCargo_ShouldThrowException() {
-        
+
         CargoManifestRequestDTO requestWithInvalidCargo = new CargoManifestRequestDTO(
                 1L, 999L, 1L, 100, ManifestPriority.HIGH, 1L,
                 null, null, null, null, null, null, null
@@ -299,7 +307,7 @@ class CargoManifestServiceTests {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
 
-        
+
         assertThrows(DataNotFoundException.class,
                 () -> cargoManifestService.loadCargoToSpacecraft(1L, requestWithInvalidCargo));
 
@@ -308,48 +316,112 @@ class CargoManifestServiceTests {
     }
 
     @Test
+    void loadCargoToSpacecraft_WithInvalidStorageUnit_ShouldThrowException() {
+
+        CargoManifestRequestDTO requestWithInvalidStorage = new CargoManifestRequestDTO(
+                1L, 1L, 999L, 100, ManifestPriority.HIGH, 1L,
+                null, null, null, null, null, null, null
+        );
+
+        when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
+        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
+
+
+        assertThrows(DataNotFoundException.class,
+                () -> cargoManifestService.loadCargoToSpacecraft(1L, requestWithInvalidStorage));
+
+        verify(storageUnitRepository, times(1)).findById(999L);
+        verify(cargoManifestRepository, never()).save(any());
+    }
+
+    @Test
+    void loadCargoToSpacecraft_WithInvalidUser_ShouldThrowException() {
+
+        CargoManifestRequestDTO requestWithInvalidUser = new CargoManifestRequestDTO(
+                1L, 1L, 1L, 100, ManifestPriority.HIGH, 999L,
+                null, null, null, null, null, null, null
+        );
+
+        when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
+        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+
+        assertThrows(DataNotFoundException.class,
+                () -> cargoManifestService.loadCargoToSpacecraft(1L, requestWithInvalidUser));
+
+        verify(userRepository, times(1)).findById(999L);
+        verify(cargoManifestRepository, never()).save(any());
+    }
+
+    @Test
     void unloadCargoFromSpacecraft_ShouldUpdateAllActiveManifests() {
-        
         CargoManifestRequestDTO unloadRequest = new CargoManifestRequestDTO(
                 null, null, null, null, null, null,
                 null, null, 2L, null, null, null, null
         );
 
-        User unloadUser = User.builder().id(2L).first_name("Jane").last_name("Smith").build();
+        User unloadUser = User.builder()
+                .id(2L)
+                .email("jane.smith@example.com")
+                .username("Jane Smith")
+                .roleId(1L)
+                .passwordHash("encodedPassword")
+                .build();
 
         CargoManifest activeManifest1 = CargoManifest.builder()
                 .id(1L).spacecraftId(1L).cargoId(1L).storageUnitId(1L)
                 .quantity(100).loadedByUserId(1L).manifestStatus(ManifestStatus.LOADED).build();
 
         CargoManifest activeManifest2 = CargoManifest.builder()
-                .id(2L).spacecraftId(1L).cargoId(1L).storageUnitId(1L)
+                .id(2L).spacecraftId(1L).cargoId(2L).storageUnitId(2L)
                 .quantity(50).loadedByUserId(1L).manifestStatus(ManifestStatus.LOADED).build();
 
         List<CargoManifest> activeManifests = List.of(activeManifest1, activeManifest2);
+
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoManifestRepository.findActiveCargoBySpacecraft(1L)).thenReturn(activeManifests);
         when(userRepository.findById(2L)).thenReturn(Optional.of(unloadUser));
 
-        when(cargoManifestRepository.save(any(CargoManifest.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(cargoRepository.findById(2L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
+        when(storageUnitRepository.findById(2L)).thenReturn(Optional.of(testStorageUnit));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        setupCommonMocks();
-        when(cargoManifestMapper.toResponseDTO(any(), any(), any(), any(), any(), any()))
-                .thenReturn(testResponseDTO);
 
-        
+        when(cargoManifestMapper.toResponseDTO(
+                any(CargoManifest.class),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn(testResponseDTO);
+
         List<CargoManifestResponseDTO> result = cargoManifestService.unloadCargoFromSpacecraft(1L, unloadRequest);
 
-        
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(cargoManifestRepository, times(2)).save(any(CargoManifest.class));
+
+        verify(cargoManifestRepository, times(1)).findActiveCargoBySpacecraft(1L);
+        verify(jdbcTemplate, times(2)).update(anyString(), any(Object[].class));
+
+        verify(cargoRepository, atLeastOnce()).findById(1L);
+        verify(cargoRepository, atLeastOnce()).findById(2L);
+        verify(storageUnitRepository, atLeastOnce()).findById(1L);
+        verify(storageUnitRepository, atLeastOnce()).findById(2L);
+        verify(userRepository, atLeastOnce()).findById(1L);
+
     }
 
     @Test
     void unloadCargoFromSpacecraft_WithNoActiveManifests_ShouldReturnEmptyList() {
-        
+
         CargoManifestRequestDTO unloadRequest = new CargoManifestRequestDTO(
                 null, null, null, null, null, null,
                 null, null, 1L, null, null, null, null
@@ -358,23 +430,29 @@ class CargoManifestServiceTests {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(cargoManifestRepository.findActiveCargoBySpacecraft(1L)).thenReturn(List.of());
 
-        
+
         List<CargoManifestResponseDTO> result = cargoManifestService.unloadCargoFromSpacecraft(1L, unloadRequest);
 
-        
+
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(cargoManifestRepository, never()).save(any());
     }
 
-    
+
     private void setupCommonMocks() {
         lenient().when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         lenient().when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         lenient().when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
         lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         lenient().when(userRepository.findById(2L)).thenReturn(Optional.of(
-                User.builder().id(2L).first_name("Jane").last_name("Smith").build()
+                User.builder()
+                        .id(2L)
+                        .email("jane.smith@example.com")
+                        .username("Jane Smith")
+                        .roleId(1L)
+                        .passwordHash("encodedPassword")
+                        .build()
         ));
     }
 }
