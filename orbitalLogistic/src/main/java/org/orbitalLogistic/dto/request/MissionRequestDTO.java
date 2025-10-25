@@ -45,7 +45,6 @@ public record MissionRequestDTO(
     Boolean isSuccessful,
     String failureReason,
 
-    // Поля для операции загрузки и запуска
     List<CargoItemDTO> cargoItems
 ) {
     public record CargoItemDTO(

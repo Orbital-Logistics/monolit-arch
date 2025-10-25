@@ -42,8 +42,6 @@ class UserServiceTests {
     @InjectMocks
     private UserService userService;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     private User testUser;
     private UserRole testRole;
@@ -102,7 +100,7 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(false);
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(newUser);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.of(testRole));
         when(userRepository.save(newUser)).thenReturn(savedUser);
         when(userMapper.toResponseDTO(savedUser)).thenReturn(expectedResponse);
@@ -116,7 +114,6 @@ class UserServiceTests {
         assertEquals("Jane Doe", result.username());
         verify(userRepository, times(1)).existsByEmail("jane.doe@example.com");
         verify(userMapper, times(1)).toEntity(testRegistrationRequest);
-        verify(passwordEncoder, times(1)).encode("password123");
         verify(roleRepository, times(1)).findByName("logistics_officer");
         verify(userRepository, times(1)).save(newUser);
         verify(userMapper, times(1)).toResponseDTO(savedUser);
@@ -414,7 +411,7 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(false);
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(testUser);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.empty());
 
 
@@ -453,7 +450,7 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
         when(userMapper.toEntity(any())).thenReturn(newUser);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.of(testRole));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(userMapper.toResponseDTO(savedUser)).thenReturn(expectedResponse);
@@ -469,6 +466,6 @@ class UserServiceTests {
         assertNotNull(result);
         assertEquals("new.user@example.com", result.email());
         verify(userRepository, times(1)).save(any(User.class));
-        verify(passwordEncoder, times(1)).encode("password123");
+
     }
 }

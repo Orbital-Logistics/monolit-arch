@@ -34,47 +34,39 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
     @Override
     protected List<?> userConverters() {
         return Arrays.asList(
-            // Spacecraft
+
             new EnumToStringConverter.SpacecraftStatusEnumToString(),
             new EnumToStringConverter.StringToSpacecraftStatusEnum(),
 
-            // Storage
             new EnumToStringConverter.StorageTypeEnumToString(),
             new EnumToStringConverter.StringToStorageTypeEnum(),
 
-            // Cargo
             new EnumToStringConverter.CargoTypeEnumToString(),
             new EnumToStringConverter.StringToCargoTypeEnum(),
             new EnumToStringConverter.HazardLevelEnumToString(),
             new EnumToStringConverter.StringToHazardLevelEnum(),
 
-            // Mission
             new EnumToStringConverter.MissionTypeEnumToString(),
             new EnumToStringConverter.StringToMissionTypeEnum(),
             new EnumToStringConverter.MissionStatusEnumToString(),
             new EnumToStringConverter.StringToMissionStatusEnum(),
 
-            // Transaction
             new EnumToStringConverter.TransactionTypeEnumToString(),
             new EnumToStringConverter.StringToTransactionTypeEnum(),
 
-            // Manifest
             new EnumToStringConverter.ManifestStatusEnumToString(),
             new EnumToStringConverter.StringToManifestStatusEnum(),
             new EnumToStringConverter.ManifestPriorityEnumToString(),
             new EnumToStringConverter.StringToManifestPriorityEnum(),
 
-            // Maintenance
             new EnumToStringConverter.MaintenanceTypeEnumToString(),
             new EnumToStringConverter.StringToMaintenanceTypeEnum(),
             new EnumToStringConverter.MaintenanceStatusEnumToString(),
             new EnumToStringConverter.StringToMaintenanceStatusEnum(),
 
-            // Assignment
             new EnumToStringConverter.AssignmentRoleEnumToString(),
             new EnumToStringConverter.StringToAssignmentRoleEnum(),
 
-            // Mission Priority
             new EnumToStringConverter.MissionPriorityEnumToString(),
             new EnumToStringConverter.StringToMissionPriorityEnum()
         );

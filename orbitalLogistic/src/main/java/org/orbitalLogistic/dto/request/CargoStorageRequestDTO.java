@@ -13,7 +13,6 @@ public record CargoStorageRequestDTO(
     @Min(value = 0, message = "Quantity must be non-negative")
     Integer quantity,
 
-    // Поля для обновления количества
     Long updatedByUserId,
 
     @Size(max = 100, message = "Reason must not exceed 100 characters")

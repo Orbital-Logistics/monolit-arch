@@ -14,7 +14,6 @@ import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.UserMapper;
 import org.orbitalLogistic.repositories.UserRepository;
 import org.orbitalLogistic.repositories.UserRoleRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +27,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
-    
+
     public UserResponseDTO registerUser(UserRegistrationRequestDTO request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException("User with email already exists");
         }
 
         User user = userMapper.toEntity(request);
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPasswordHash(request.password());
         // Set default USER role
         UserRole userRole = roleRepository.findByName("logistics_officer")
                 .orElseThrow(() -> new DataNotFoundException("logistics_officer role not found"));

@@ -142,7 +142,7 @@ CREATE TABLE cargo_manifest (
 
 CREATE TABLE inventory_transaction (
     id BIGSERIAL PRIMARY KEY,
-    transaction_type transaction_type_enum NOT NULL,
+    transaction_type transaction_type_enum NOT NULL DEFAULT 'LOAD',
     cargo_id BIGINT NOT NULL REFERENCES Cargo(id) ON DELETE RESTRICT,
     quantity INTEGER NOT NULL,
     from_storage_unit_id BIGINT REFERENCES storage_unit(id) ON DELETE SET NULL,
