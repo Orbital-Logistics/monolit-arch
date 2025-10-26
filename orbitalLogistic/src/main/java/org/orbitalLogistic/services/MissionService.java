@@ -19,14 +19,12 @@ import org.orbitalLogistic.repositories.UserRepository;
 import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MissionService {
 
     private final MissionRepository missionRepository;
@@ -35,7 +33,6 @@ public class MissionService {
     private final MissionMapper missionMapper;
     private final JdbcTemplate jdbcTemplate;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MissionResponseDTO> getMissions(String missionCode, String status, String missionType, int page, int size) {
         int offset = page * size;
         List<Mission> missions = missionRepository.findWithFilters(missionCode, null, status, missionType, null, null, null, size, offset);
@@ -49,14 +46,12 @@ public class MissionService {
         return new PageResponseDTO<>(missionDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public MissionResponseDTO getMissionById(Long id) {
         Mission mission = missionRepository.findById(id)
                 .orElseThrow(() -> new MissionNotFoundException("Mission not found with id: " + id));
         return toResponseDTO(mission);
     }
 
-    @Transactional(readOnly = true)
     public List<MissionResponseDTO> getActiveMissions() {
         LocalDateTime now = LocalDateTime.now();
         return missionRepository.findActiveMissions(now).stream()
@@ -69,15 +64,12 @@ public class MissionService {
             throw new MissionAlreadyExistsException("Mission with code already exists: " + request.missionCode());
         }
 
-        // Validate commanding officer exists
-        User commandingOfficer = userRepository.findById(request.commandingOfficerId())
+        userRepository.findById(request.commandingOfficerId())
                 .orElseThrow(() -> new DataNotFoundException("Commanding officer not found"));
 
-        // Validate spacecraft exists
-        Spacecraft spacecraft = spacecraftRepository.findById(request.spacecraftId())
+        spacecraftRepository.findById(request.spacecraftId())
                 .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
 
-        // Используем JdbcTemplate для создания с явным CAST enum
         String sql = "INSERT INTO mission " +
                     "(mission_code, mission_name, mission_type, status, priority, " +
                     "commanding_officer_id, spacecraft_id, scheduled_departure, scheduled_arrival) " +
@@ -126,7 +118,6 @@ public class MissionService {
             throw new MissionAlreadyExistsException("Mission with code already exists: " + request.missionCode());
         }
 
-        // Используем JdbcTemplate для обновления с явным CAST enum
         String sql = "UPDATE mission SET " +
                      "mission_code = ?, " +
                      "mission_name = ?, " +
@@ -142,17 +133,15 @@ public class MissionService {
         jdbcTemplate.update(sql,
                 request.missionCode(),
                 request.missionName(),
-                request.missionType().name(), // mission_type_enum
-                request.status().name(),      // mission_status_enum
-                request.priority().name(),    // mission_priority_enum
+                request.missionType().name(),
+                request.status().name(),
+                request.priority().name(),
                 request.commandingOfficerId(),
                 request.spacecraftId(),
                 request.scheduledDeparture(),
                 request.scheduledArrival(),
-                id
-        );
+                id);
 
-        // Обновляем объект для возврата
         mission.setMissionCode(request.missionCode());
         mission.setMissionName(request.missionName());
         mission.setMissionType(request.missionType());
@@ -166,25 +155,21 @@ public class MissionService {
         return toResponseDTO(mission);
     }
 
-    @Transactional
     public MissionResponseDTO completeMission(Long id, MissionRequestDTO request) {
         Mission mission = missionRepository.findById(id)
                 .orElseThrow(() -> new MissionNotFoundException("Mission not found with id: " + id));
 
-        // Используем JdbcTemplate для завершения миссии
         String sql = "UPDATE mission SET status = ?::mission_status_enum WHERE id = ?";
         jdbcTemplate.update(sql, 
             request.isSuccessful() ? MissionStatus.COMPLETED.name() : MissionStatus.CANCELLED.name(), 
             id
         );
 
-        // Обновляем объект
         mission.setStatus(request.isSuccessful() ? MissionStatus.COMPLETED : MissionStatus.CANCELLED);
 
         return toResponseDTO(mission);
     }
 
-    // Дополнительные методы для бизнес-логики
 
     public MissionResponseDTO startMission(Long id) {
         Mission mission = missionRepository.findById(id)
@@ -226,13 +211,9 @@ public class MissionService {
         String sql = "UPDATE mission SET priority = ?::mission_priority_enum WHERE id = ?";
         jdbcTemplate.update(sql, priority, id);
 
-        // Обновляем объект (нужно преобразовать String в enum)
-        // mission.setPriority(...);
-
         return toResponseDTO(mission);
     }
 
-    @Transactional(readOnly = true)
     public List<MissionResponseDTO> getMissionsByStatus(MissionStatus status) {
         return missionRepository.findByStatus(status).stream()
                 .map(this::toResponseDTO)
@@ -251,7 +232,6 @@ public class MissionService {
                 spacecraft.getName());
     }
 
-    // Метод для проверки возможности создания миссии
     public boolean canCreateMission(Long spacecraftId, LocalDateTime departure, LocalDateTime arrival) {
         String sql = "SELECT COUNT(*) = 0 FROM mission " +
                      "WHERE spacecraft_id = ? " +

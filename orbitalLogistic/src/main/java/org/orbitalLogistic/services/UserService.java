@@ -15,13 +15,11 @@ import org.orbitalLogistic.mappers.UserMapper;
 import org.orbitalLogistic.repositories.UserRepository;
 import org.orbitalLogistic.repositories.UserRoleRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -35,7 +33,6 @@ public class UserService {
 
         User user = userMapper.toEntity(request);
         user.setPasswordHash(request.password());
-        // Set default USER role
         UserRole userRole = roleRepository.findByName("logistics_officer")
                 .orElseThrow(() -> new DataNotFoundException("logistics_officer role not found"));
         user.setRoleId(userRole.getId());
@@ -44,7 +41,6 @@ public class UserService {
         return toResponseDTO(user);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<UserResponseDTO> getUsers(String email, String username, int page, int size) {
         int offset = page * size;
         List<User> users = userRepository.findUsersWithFilters(email, username, size, offset);
@@ -56,14 +52,12 @@ public class UserService {
         return new PageResponseDTO<>(userDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public UserResponseDTO findUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return toResponseDTO(user);
     }
 
-    @Transactional(readOnly = true)
     public UserResponseDTO findUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

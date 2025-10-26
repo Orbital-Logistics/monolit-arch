@@ -24,7 +24,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MissionAssignmentService {
 
     private final MissionAssignmentRepository missionAssignmentRepository;
@@ -33,10 +32,7 @@ public class MissionAssignmentService {
     private final MissionAssignmentMapper missionAssignmentMapper;
     private final JdbcTemplate jdbcTemplate;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MissionAssignmentResponseDTO> getAllAssignments(int page, int size) {
-        // Implementation using repository pagination
-        // For simplicity, using a basic approach
         long total = missionAssignmentRepository.count();
         List<MissionAssignment> assignments = (List<MissionAssignment>) missionAssignmentRepository.findAll();
 
@@ -50,7 +46,6 @@ public class MissionAssignmentService {
         return new PageResponseDTO<>(assignmentDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MissionAssignmentResponseDTO> getMissionAssignments(Long missionId, int page, int size) {
         List<MissionAssignment> assignments = missionAssignmentRepository.findByMissionIdOrderByRole(missionId);
 
@@ -64,22 +59,23 @@ public class MissionAssignmentService {
         return new PageResponseDTO<>(assignmentDTOs, page, size, assignments.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как может создавать множественные назначения экипажа
+     * в одной операции. Все назначения должны быть сохранены атомарно.
+     */
     @Transactional
     public List<MissionAssignmentResponseDTO> assignCrew(Long missionId, MissionAssignmentRequestDTO request) {
-        // Validate mission exists
-        Mission mission = missionRepository.findById(missionId)
+        missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException("Mission not found with id: " + missionId));
 
         List<MissionAssignmentResponseDTO> results = List.of();
 
-        // Handle individual assignment
         if (request.userId() != null) {
             MissionAssignment assignment = createAssignment(missionId, request.userId(),
                     request.assignmentRole(), request.responsibilityZone());
             results = List.of(toResponseDTO(assignment));
         }
 
-        // Handle crew assignments
         if (request.crewAssignments() != null && !request.crewAssignments().isEmpty()) {
             results = request.crewAssignments().stream()
                     .map(crewDto -> createAssignment(missionId, crewDto.userId(),
@@ -101,16 +97,13 @@ public class MissionAssignmentService {
     private MissionAssignment createAssignment(Long missionId, Long userId,
         org.orbitalLogistic.entities.enums.AssignmentRole role, String responsibilityZone) {
 
-        // Check if user exists
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found with id: " + userId));
 
-        // Check if assignment already exists
         if (missionAssignmentRepository.existsByMissionIdAndUserId(missionId, userId)) {
                 throw new UserAlreadyAssignedException(missionId, userId, user.getUsername());
         }
 
-        // Используем JdbcTemplate для создания с явным CAST enum
         String sql = "INSERT INTO mission_assignment " +
                         "(mission_id, user_id, assignment_role, responsibility_zone) " +
                         "VALUES (?, ?, ?::assignment_role_enum, ?) " +
@@ -119,11 +112,10 @@ public class MissionAssignmentService {
         Long newId = jdbcTemplate.queryForObject(sql, Long.class,
                 missionId,
                 userId,
-                role.name(), // Преобразуем enum в string
+                role.name(),
                 responsibilityZone
         );
 
-        // Получаем созданную запись
         String selectSql = "SELECT * FROM mission_assignment WHERE id = ?";
         
         return jdbcTemplate.queryForObject(selectSql, 

@@ -1,4 +1,3 @@
-// CargoService.java
 package org.orbitalLogistic.services;
 
 import lombok.RequiredArgsConstructor;
@@ -15,22 +14,20 @@ import org.orbitalLogistic.mappers.CargoMapper;
 import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.CargoCategoryRepository;
 import org.orbitalLogistic.repositories.CargoManifestRepository;
+import org.orbitalLogistic.repositories.CargoStorageRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CargoService {
 
     private final CargoRepository cargoRepository;
     private final CargoCategoryRepository cargoCategoryRepository;
     private final CargoManifestRepository cargoManifestRepository;
+    private final CargoStorageRepository cargoStorageRepository;
     private final CargoMapper cargoMapper;
 
-    @Transactional(readOnly = true)
     public List<CargoResponseDTO> getCargosScroll(int page, int size) {
         int offset = page * size;
         List<Cargo> cargos = cargoRepository.findWithFilters(null, null, null, size + 1, offset);
@@ -41,7 +38,6 @@ public class CargoService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoResponseDTO> getCargosPaged(String name, String cargoType, String hazardLevel, int page, int size) {
         int offset = page * size;
         List<Cargo> cargos = cargoRepository.findWithFilters(name, cargoType, hazardLevel, size, offset);
@@ -55,7 +51,6 @@ public class CargoService {
         return new PageResponseDTO<>(cargoDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public CargoResponseDTO getCargoById(Long id) {
         Cargo cargo = cargoRepository.findById(id)
                 .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
@@ -112,7 +107,6 @@ public class CargoService {
         cargoRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoResponseDTO> searchCargos(String name, String cargoType, String hazardLevel, int page, int size) {
         return getCargosPaged(name, cargoType, hazardLevel, page, size);
     }
@@ -121,7 +115,6 @@ public class CargoService {
         CargoCategory cargoCategory = cargoCategoryRepository.findById(cargo.getCargoCategoryId())
                 .orElseThrow(() -> new DataNotFoundException("Cargo category not found"));
 
-        // Calculate total quantity (simplified - implement actual logic from CargoStorage)
         Integer totalQuantity = calculateTotalQuantity(cargo);
 
         return cargoMapper.toResponseDTO(
@@ -132,7 +125,9 @@ public class CargoService {
     }
 
     private Integer calculateTotalQuantity(Cargo cargo) {
-        // TODO: Implement actual calculation from CargoStorage
-        return 0;
+        return cargoStorageRepository.findByCargoId(cargo.getId())
+                .stream()
+                .mapToInt(storage -> storage.getQuantity() != null ? storage.getQuantity() : 0)
+                .sum();
     }
 }

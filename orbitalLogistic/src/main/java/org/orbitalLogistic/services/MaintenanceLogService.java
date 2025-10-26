@@ -23,7 +23,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MaintenanceLogService {
 
     private final MaintenanceLogRepository maintenanceLogRepository;
@@ -31,7 +30,6 @@ public class MaintenanceLogService {
     private final UserRepository userRepository;
     private final MaintenanceLogMapper maintenanceLogMapper;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MaintenanceLogResponseDTO> getAllMaintenanceLogs(int page, int size) {
         long total = maintenanceLogRepository.count();
         List<MaintenanceLog> logs = (List<MaintenanceLog>) maintenanceLogRepository.findAll();
@@ -46,7 +44,6 @@ public class MaintenanceLogService {
         return new PageResponseDTO<>(logDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MaintenanceLogResponseDTO> getSpacecraftMaintenanceHistory(Long spacecraftId, int page, int size) {
         List<MaintenanceLog> logs = maintenanceLogRepository.findBySpacecraftIdOrderByStartTime(spacecraftId);
 
@@ -60,6 +57,12 @@ public class MaintenanceLogService {
         return new PageResponseDTO<>(logDTOs, page, size, logs.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как кроме создания записи о техобслуживании
+     * может обновлять статус космического корабля. Обе операции должны выполниться
+     * атомарно.
+     */
+    @Transactional
     public MaintenanceLogResponseDTO createMaintenanceLog(MaintenanceLogRequestDTO request) {
         validateEntities(request);
 
@@ -73,6 +76,11 @@ public class MaintenanceLogService {
         return toResponseDTO(saved);
     }
 
+    /**
+     * Требует @Transactional, так как обновляет запись техобслуживания
+     * и может изменять статус космического корабля. Обе операции должны
+     * быть атомарными.
+     */
     @Transactional
     public MaintenanceLogResponseDTO updateMaintenanceStatus(Long id, MaintenanceLogRequestDTO request) {
         MaintenanceLog maintenanceLog = maintenanceLogRepository.findById(id)

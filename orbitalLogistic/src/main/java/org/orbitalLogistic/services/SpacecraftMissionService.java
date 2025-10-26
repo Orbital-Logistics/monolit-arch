@@ -14,13 +14,11 @@ import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.orbitalLogistic.repositories.MissionRepository;
 import org.orbitalLogistic.repositories.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SpacecraftMissionService {
 
     private final SpacecraftMissionRepository spacecraftMissionRepository;
@@ -29,7 +27,6 @@ public class SpacecraftMissionService {
     private final UserRepository userRepository;
     private final SpacecraftMissionMapper spacecraftMissionMapper;
 
-    @Transactional(readOnly = true)
     public List<SpacecraftMissionResponseDTO> getMissionBackupSpacecrafts(Long missionId) {
         List<SpacecraftMission> spacecraftMissions = spacecraftMissionRepository.findByMissionIdOrderBySpacecraftName(missionId);
         return spacecraftMissions.stream()
@@ -37,11 +34,9 @@ public class SpacecraftMissionService {
                 .toList();
     }
 
-    @Transactional
     public SpacecraftMissionResponseDTO addBackupSpacecraft(Long missionId, SpacecraftMissionRequestDTO request) {
         validateEntities(missionId, request);
 
-        // Check if spacecraft is already assigned to this mission
         if (spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(request.spacecraftId(), missionId)) {
             throw new RuntimeException("Spacecraft is already assigned to this mission");
         }
@@ -55,7 +50,6 @@ public class SpacecraftMissionService {
         return toResponseDTO(saved, request.roleDescription(), request.assignedByUserId());
     }
 
-    @Transactional
     public void removeBackupSpacecraft(Long missionId, Long spacecraftId) {
         if (!spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(spacecraftId, missionId)) {
             throw new DataNotFoundException("Spacecraft assignment not found for this mission");

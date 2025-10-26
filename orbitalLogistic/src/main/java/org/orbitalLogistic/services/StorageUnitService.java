@@ -15,23 +15,20 @@ import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.CargoStorageRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class StorageUnitService {
 
     private final StorageUnitRepository storageUnitRepository;
     private final CargoStorageRepository cargoStorageRepository;
     private final StorageUnitMapper storageUnitMapper;
     private final CargoStorageMapper cargoStorageMapper;
-    private final JdbcTemplate jdbcTemplate; // Добавляем JdbcTemplate
+    private final JdbcTemplate jdbcTemplate;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<StorageUnitResponseDTO> getStorageUnits(int page, int size) {
         int offset = page * size;
         List<StorageUnit> storageUnits = storageUnitRepository.findAllPaged(size, offset);
@@ -45,7 +42,6 @@ public class StorageUnitService {
         return new PageResponseDTO<>(storageUnitDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public StorageUnitResponseDTO getStorageUnitById(Long id) {
         StorageUnit storageUnit = storageUnitRepository.findById(id)
                 .orElseThrow(() -> new StorageUnitNotFoundException("Storage unit not found with id: " + id));
@@ -57,7 +53,6 @@ public class StorageUnitService {
             throw new StorageUnitAlreadyExistsException("Storage unit with code already exists: " + request.unitCode());
         }
 
-        // Используем JdbcTemplate для создания с явным CAST enum
         String sql = "INSERT INTO storage_unit " +
                      "(unit_code, location, storage_type, total_mass_capacity, total_volume_capacity, current_mass, current_volume) " +
                      "VALUES (?, ?, ?::storage_type_enum, ?, ?, 0.00, 0.00) " +
@@ -66,12 +61,11 @@ public class StorageUnitService {
         Long newId = jdbcTemplate.queryForObject(sql, Long.class,
                 request.unitCode(),
                 request.location(),
-                request.storageType().name(), // Преобразуем enum в string
+                request.storageType().name(),
                 request.totalMassCapacity(),
                 request.totalVolumeCapacity()
         );
 
-        // Получаем созданную запись
         StorageUnit saved = storageUnitRepository.findById(newId)
                 .orElseThrow(() -> new StorageUnitNotFoundException("Failed to create storage unit"));
 
@@ -87,11 +81,10 @@ public class StorageUnitService {
             throw new StorageUnitAlreadyExistsException("Storage unit with code already exists: " + request.unitCode());
         }
 
-        // Используем JdbcTemplate для обновления с явным CAST enum
         String sql = "UPDATE storage_unit SET " +
                      "unit_code = ?, " +
                      "location = ?, " +
-                     "storage_type = ?::storage_type_enum, " + // Явное приведение типа
+                     "storage_type = ?::storage_type_enum, " +
                      "total_mass_capacity = ?, " +
                      "total_volume_capacity = ?, " +
                      "current_mass = ?, " +
@@ -101,7 +94,7 @@ public class StorageUnitService {
         jdbcTemplate.update(sql,
                 request.unitCode(),
                 request.location(),
-                request.storageType().name(), // Преобразуем enum в string
+                request.storageType().name(),
                 request.totalMassCapacity(),
                 request.totalVolumeCapacity(),
                 storageUnit.getCurrentMass(),
@@ -109,7 +102,6 @@ public class StorageUnitService {
                 id
         );
 
-        // Обновляем объект для возврата
         storageUnit.setUnitCode(request.unitCode());
         storageUnit.setLocation(request.location());
         storageUnit.setStorageType(request.storageType());
@@ -119,7 +111,6 @@ public class StorageUnitService {
         return toResponseDTO(storageUnit);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoStorageResponseDTO> getStorageUnitInventory(Long id, int page, int size) {
         if (!storageUnitRepository.existsById(id)) {
             throw new StorageUnitNotFoundException("Storage unit not found with id: " + id);
@@ -150,8 +141,6 @@ public class StorageUnitService {
             page >= totalPages - 1
         );
     }
-
-    // Дополнительные методы для работы с inventory
 
     public void updateStorageUnitCapacity(Long storageUnitId) {
         String sql = "UPDATE storage_unit su " +

@@ -23,7 +23,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CargoStorageService {
 
     private final CargoStorageRepository cargoStorageRepository;
@@ -32,7 +31,6 @@ public class CargoStorageService {
     private final UserRepository userRepository;
     private final CargoStorageMapper cargoStorageMapper;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoStorageResponseDTO> getAllCargoStorage(int page, int size) {
         long total = cargoStorageRepository.count();
         List<CargoStorage> cargoStorages = (List<CargoStorage>) cargoStorageRepository.findAll();
@@ -47,7 +45,6 @@ public class CargoStorageService {
         return new PageResponseDTO<>(storageDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoStorageResponseDTO> getStorageUnitCargo(Long storageUnitId, int page, int size) {
         List<CargoStorage> cargoStorages = cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(storageUnitId);
 
@@ -61,21 +58,23 @@ public class CargoStorageService {
         return new PageResponseDTO<>(storageDTOs, page, size, cargoStorages.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как метод выполняет либо INSERT, либо UPDATE
+     * в зависимости от наличия груза в хранилище. Также выполняется проверка
+     * наличия всех связанных сущностей. Все операции должны быть атомарными.
+     */
+    @Transactional
     public CargoStorageResponseDTO addCargoToStorage(CargoStorageRequestDTO request) {
-        // Validate entities exist
         validateEntities(request);
 
-        // Check if cargo already exists in this storage unit
         List<CargoStorage> existing = cargoStorageRepository.findByStorageUnitIdAndCargoId(
                 request.storageUnitId(), request.cargoId());
 
         CargoStorage cargoStorage;
         if (!existing.isEmpty()) {
-            // Update existing storage record
             cargoStorage = existing.get(0);
             cargoStorage.setQuantity(cargoStorage.getQuantity() + request.quantity());
         } else {
-            // Create new storage record
             cargoStorage = cargoStorageMapper.toEntity(request);
         }
 
@@ -83,12 +82,10 @@ public class CargoStorageService {
         return toResponseDTO(saved);
     }
 
-    @Transactional
     public CargoStorageResponseDTO updateQuantity(Long id, CargoStorageRequestDTO request) {
         CargoStorage cargoStorage = cargoStorageRepository.findById(id)
                 .orElseThrow(() -> new CargoStorageNotFoundException("Cargo storage not found with id: " + id));
 
-        // Update quantity and tracking info
         cargoStorage.setQuantity(request.quantity());
         cargoStorage.setLastInventoryCheck(LocalDateTime.now());
 

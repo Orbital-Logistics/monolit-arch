@@ -16,7 +16,6 @@ import org.orbitalLogistic.repositories.CargoRepository;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
 import org.orbitalLogistic.repositories.SpacecraftRepository;
 import org.orbitalLogistic.repositories.UserRepository;
-import org.orbitalLogistic.repositories.CargoManifestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class InventoryTransactionService {
 
     private final InventoryTransactionRepository inventoryTransactionRepository;
@@ -32,10 +30,8 @@ public class InventoryTransactionService {
     private final StorageUnitRepository storageUnitRepository;
     private final SpacecraftRepository spacecraftRepository;
     private final UserRepository userRepository;
-    private final CargoManifestRepository cargoManifestRepository;
     private final InventoryTransactionMapper inventoryTransactionMapper;
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<InventoryTransactionResponseDTO> getAllTransactions(int page, int size) {
         long total = inventoryTransactionRepository.count();
         List<InventoryTransaction> transactions = (List<InventoryTransaction>) inventoryTransactionRepository.findAll();
@@ -50,14 +46,12 @@ public class InventoryTransactionService {
         return new PageResponseDTO<>(transactionDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public InventoryTransactionResponseDTO getTransactionById(Long id) {
         InventoryTransaction transaction = inventoryTransactionRepository.findById(id)
                 .orElseThrow(() -> new InventoryTransactionNotFoundException("Transaction not found with id: " + id));
         return toResponseDTO(transaction);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<InventoryTransactionResponseDTO> getCargoHistory(Long cargoId, int page, int size) {
         List<InventoryTransaction> transactions = inventoryTransactionRepository.findByCargoIdOrderByTransactionDate(cargoId);
 
@@ -71,6 +65,10 @@ public class InventoryTransactionService {
         return new PageResponseDTO<>(transactionDTOs, page, size, transactions.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как перемещение груза между хранилищами должно
+     * быть атомарной операцией.
+     */
     @Transactional
     public InventoryTransactionResponseDTO transferBetweenStorages(InventoryTransactionRequestDTO request) {
         validateTransactionEntities(request);
