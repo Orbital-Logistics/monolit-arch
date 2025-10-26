@@ -9,21 +9,17 @@ import org.orbitalLogistic.mappers.SpacecraftTypeMapper;
 import org.orbitalLogistic.repositories.SpacecraftTypeRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SpacecraftTypeService {
 
     private final SpacecraftTypeRepository spacecraftTypeRepository;
     private final SpacecraftTypeMapper spacecraftTypeMapper;
     private final JdbcTemplate jdbcTemplate;
 
-
-    @Transactional(readOnly = true)
     public List<SpacecraftTypeResponseDTO> getAllSpacecraftTypes() {
         List<SpacecraftType> types = (List<SpacecraftType>) spacecraftTypeRepository.findAll();
         return types.stream()
@@ -31,7 +27,6 @@ public class SpacecraftTypeService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public SpacecraftTypeResponseDTO getSpacecraftTypeById(Long id) {
         SpacecraftType type = spacecraftTypeRepository.findById(id)
                 .orElseThrow(() -> new SpacecraftTypeNotFoundException("Spacecraft type not found with id: " + id));
@@ -50,10 +45,14 @@ public class SpacecraftTypeService {
                 request.maxCrewCapacity()
         );
 
-        // Получаем созданную запись
         SpacecraftType saved = spacecraftTypeRepository.findById(newId)
                 .orElseThrow(() -> new SpacecraftTypeNotFoundException("Failed to create spacecraft type"));
 
         return spacecraftTypeMapper.toResponseDTO(saved);
+    }
+
+    public SpacecraftType getEntityById(Long id) {
+        return spacecraftTypeRepository.findById(id)
+                .orElseThrow(() -> new SpacecraftTypeNotFoundException("Spacecraft type not found with id: " + id));
     }
 }

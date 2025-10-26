@@ -1,36 +1,50 @@
-// CargoService.java
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.CargoRequestDTO;
 import org.orbitalLogistic.dto.response.CargoResponseDTO;
 import org.orbitalLogistic.entities.Cargo;
 import org.orbitalLogistic.entities.CargoCategory;
-import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.exceptions.CargoAlreadyExistsException;
 import org.orbitalLogistic.exceptions.CargoNotFoundException;
 import org.orbitalLogistic.exceptions.InvalidOperationException;
 import org.orbitalLogistic.mappers.CargoMapper;
 import org.orbitalLogistic.repositories.CargoRepository;
-import org.orbitalLogistic.repositories.CargoCategoryRepository;
-import org.orbitalLogistic.repositories.CargoManifestRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class CargoService {
 
     private final CargoRepository cargoRepository;
-    private final CargoCategoryRepository cargoCategoryRepository;
-    private final CargoManifestRepository cargoManifestRepository;
     private final CargoMapper cargoMapper;
 
-    @Transactional(readOnly = true)
+    private CargoCategoryService cargoCategoryService;
+    private CargoManifestService cargoManifestService;
+    private CargoStorageService cargoStorageService;
+
+    public CargoService(CargoRepository cargoRepository, CargoMapper cargoMapper) {
+        this.cargoRepository = cargoRepository;
+        this.cargoMapper = cargoMapper;
+    }
+
+    @Autowired
+    public void setCargoCategoryService(@Lazy CargoCategoryService cargoCategoryService) {
+        this.cargoCategoryService = cargoCategoryService;
+    }
+
+    @Autowired
+    public void setCargoManifestService(@Lazy CargoManifestService cargoManifestService) {
+        this.cargoManifestService = cargoManifestService;
+    }
+
+    @Autowired
+    public void setCargoStorageService(@Lazy CargoStorageService cargoStorageService) {
+        this.cargoStorageService = cargoStorageService;
+    }
+
     public List<CargoResponseDTO> getCargosScroll(int page, int size) {
         int offset = page * size;
         List<Cargo> cargos = cargoRepository.findWithFilters(null, null, null, size + 1, offset);
@@ -41,7 +55,6 @@ public class CargoService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoResponseDTO> getCargosPaged(String name, String cargoType, String hazardLevel, int page, int size) {
         int offset = page * size;
         List<Cargo> cargos = cargoRepository.findWithFilters(name, cargoType, hazardLevel, size, offset);
@@ -55,7 +68,6 @@ public class CargoService {
         return new PageResponseDTO<>(cargoDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public CargoResponseDTO getCargoById(Long id) {
         Cargo cargo = cargoRepository.findById(id)
                 .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
@@ -67,8 +79,7 @@ public class CargoService {
             throw new CargoAlreadyExistsException("Cargo with name already exists: " + request.name());
         }
 
-        CargoCategory cargoCategory = cargoCategoryRepository.findById(request.cargoCategoryId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo category not found"));
+        CargoCategory cargoCategory = cargoCategoryService.getEntityById(request.cargoCategoryId());
 
         Cargo cargo = cargoMapper.toEntity(request);
         cargo.setCargoCategoryId(cargoCategory.getId());
@@ -85,8 +96,7 @@ public class CargoService {
             throw new CargoAlreadyExistsException("Cargo with name already exists: " + request.name());
         }
 
-        CargoCategory cargoCategory = cargoCategoryRepository.findById(request.cargoCategoryId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo category not found"));
+        CargoCategory cargoCategory = cargoCategoryService.getEntityById(request.cargoCategoryId());
 
         cargo.setName(request.name());
         cargo.setCargoCategoryId(cargoCategory.getId());
@@ -104,7 +114,7 @@ public class CargoService {
             throw new CargoNotFoundException("Cargo not found with id: " + id);
         }
 
-        boolean hasManifests = cargoManifestRepository.existsByCargoId(id);
+        boolean hasManifests = cargoManifestService.existsByCargoId(id);
         if (hasManifests) {
             throw new InvalidOperationException("Cannot delete cargo: it is used in cargo manifests");
         }
@@ -112,27 +122,24 @@ public class CargoService {
         cargoRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoResponseDTO> searchCargos(String name, String cargoType, String hazardLevel, int page, int size) {
         return getCargosPaged(name, cargoType, hazardLevel, page, size);
     }
 
-    private CargoResponseDTO toResponseDTO(Cargo cargo) {
-        CargoCategory cargoCategory = cargoCategoryRepository.findById(cargo.getCargoCategoryId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo category not found"));
+    public Cargo getEntityById(Long id) {
+        return cargoRepository.findById(id)
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
+    }
 
-        // Calculate total quantity (simplified - implement actual logic from CargoStorage)
-        Integer totalQuantity = calculateTotalQuantity(cargo);
+    private CargoResponseDTO toResponseDTO(Cargo cargo) {
+        CargoCategory cargoCategory = cargoCategoryService.getEntityById(cargo.getCargoCategoryId());
+
+        Integer totalQuantity = cargoStorageService.calculateTotalQuantityForCargo(cargo.getId());
 
         return cargoMapper.toResponseDTO(
             cargo,
             cargoCategory.getName(),
             totalQuantity
         );
-    }
-
-    private Integer calculateTotalQuantity(Cargo cargo) {
-        // TODO: Implement actual calculation from CargoStorage
-        return 0;
     }
 }
