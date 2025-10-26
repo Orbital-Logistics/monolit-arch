@@ -50,4 +50,9 @@ public class SpacecraftTypeService {
 
         return spacecraftTypeMapper.toResponseDTO(saved);
     }
+
+    public SpacecraftType getEntityById(Long id) {
+        return spacecraftTypeRepository.findById(id)
+                .orElseThrow(() -> new SpacecraftTypeNotFoundException("Spacecraft type not found with id: " + id));
+    }
 }

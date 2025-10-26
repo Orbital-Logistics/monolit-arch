@@ -81,6 +81,15 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public User getEntityById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    public User getEntityByIdOrNull(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
     private UserResponseDTO toResponseDTO(User user) {
         return userMapper.toResponseDTO(user);
     }

@@ -1,18 +1,16 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
 import org.orbitalLogistic.dto.response.CargoStorageResponseDTO;
 import org.orbitalLogistic.entities.StorageUnit;
-import org.orbitalLogistic.entities.CargoStorage;
 import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
 import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.orbitalLogistic.mappers.StorageUnitMapper;
-import org.orbitalLogistic.mappers.CargoStorageMapper;
 import org.orbitalLogistic.repositories.StorageUnitRepository;
-import org.orbitalLogistic.repositories.CargoStorageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +18,26 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class StorageUnitService {
 
     private final StorageUnitRepository storageUnitRepository;
-    private final CargoStorageRepository cargoStorageRepository;
     private final StorageUnitMapper storageUnitMapper;
-    private final CargoStorageMapper cargoStorageMapper;
     private final JdbcTemplate jdbcTemplate;
+
+    private CargoStorageService cargoStorageService;
+
+    public StorageUnitService(StorageUnitRepository storageUnitRepository,
+                             StorageUnitMapper storageUnitMapper,
+                             JdbcTemplate jdbcTemplate) {
+        this.storageUnitRepository = storageUnitRepository;
+        this.storageUnitMapper = storageUnitMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Autowired
+    public void setCargoStorageService(@Lazy CargoStorageService cargoStorageService) {
+        this.cargoStorageService = cargoStorageService;
+    }
 
     public PageResponseDTO<StorageUnitResponseDTO> getStorageUnits(int page, int size) {
         int offset = page * size;
@@ -116,30 +126,7 @@ public class StorageUnitService {
             throw new StorageUnitNotFoundException("Storage unit not found with id: " + id);
         }
 
-        int offset = page * size;
-        List<CargoStorage> cargoStorageList = cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(id);
-
-        List<CargoStorage> pagedList = cargoStorageList.stream()
-                .skip(offset)
-                .limit(size)
-                .toList();
-
-        long total = cargoStorageRepository.countByStorageUnitId(id);
-
-        List<CargoStorageResponseDTO> responseDTOs = pagedList.stream()
-                .map(cargoStorageMapper::toResponseDTO)
-                .toList();
-
-        int totalPages = (int) Math.ceil((double) total / size);
-        return new PageResponseDTO<>(
-            responseDTOs,
-            page,
-            size,
-            total,
-            totalPages,
-            page == 0,
-            page >= totalPages - 1
-        );
+        return cargoStorageService.getStorageUnitCargo(id, page, size);
     }
 
     public void updateStorageUnitCapacity(Long storageUnitId) {
@@ -188,4 +175,10 @@ public class StorageUnitService {
             volumeUsagePercentage
         );
     }
+
+    public StorageUnit getEntityById(Long id) {
+        return storageUnitRepository.findById(id)
+                .orElseThrow(() -> new StorageUnitNotFoundException("Storage unit not found with id: " + id));
+    }
 }
+

@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.CargoManifestRequestDTO;
 import org.orbitalLogistic.dto.response.CargoManifestResponseDTO;
@@ -11,13 +10,10 @@ import org.orbitalLogistic.entities.StorageUnit;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.entities.enums.ManifestStatus;
 import org.orbitalLogistic.exceptions.CargoManifestNotFoundException;
-import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.CargoManifestMapper;
 import org.orbitalLogistic.repositories.CargoManifestRepository;
-import org.orbitalLogistic.repositories.SpacecraftRepository;
-import org.orbitalLogistic.repositories.CargoRepository;
-import org.orbitalLogistic.repositories.StorageUnitRepository;
-import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +23,44 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Service
-@RequiredArgsConstructor
 public class CargoManifestService {
 
     private final CargoManifestRepository cargoManifestRepository;
-    private final SpacecraftRepository spacecraftRepository;
-    private final CargoRepository cargoRepository;
-    private final StorageUnitRepository storageUnitRepository;
-    private final UserRepository userRepository;
     private final CargoManifestMapper cargoManifestMapper;
     private final JdbcTemplate jdbcTemplate;
+
+    private SpacecraftService spacecraftService;
+    private CargoService cargoService;
+    private StorageUnitService storageUnitService;
+    private UserService userService;
+
+    public CargoManifestService(CargoManifestRepository cargoManifestRepository,
+                                CargoManifestMapper cargoManifestMapper,
+                                JdbcTemplate jdbcTemplate) {
+        this.cargoManifestRepository = cargoManifestRepository;
+        this.cargoManifestMapper = cargoManifestMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Autowired
+    public void setSpacecraftService(@Lazy SpacecraftService spacecraftService) {
+        this.spacecraftService = spacecraftService;
+    }
+
+    @Autowired
+    public void setCargoService(@Lazy CargoService cargoService) {
+        this.cargoService = cargoService;
+    }
+
+    @Autowired
+    public void setStorageUnitService(@Lazy StorageUnitService storageUnitService) {
+        this.storageUnitService = storageUnitService;
+    }
+
+    @Autowired
+    public void setUserService(@Lazy UserService userService) {
+        this.userService = userService;
+    }
 
 
     public PageResponseDTO<CargoManifestResponseDTO> getAllManifests(int page, int size) {
@@ -79,8 +103,7 @@ public class CargoManifestService {
      */
     @Transactional
     public List<CargoManifestResponseDTO> loadCargoToSpacecraft(Long spacecraftId, CargoManifestRequestDTO request) {
-        spacecraftRepository.findById(spacecraftId)
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found with id: " + spacecraftId));
+        spacecraftService.getEntityById(spacecraftId);
 
         List<CargoManifestResponseDTO> results = new ArrayList<>();
 
@@ -120,8 +143,7 @@ public class CargoManifestService {
      */
     @Transactional
     public List<CargoManifestResponseDTO> unloadCargoFromSpacecraft(Long spacecraftId, CargoManifestRequestDTO request) {
-        spacecraftRepository.findById(spacecraftId)
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found with id: " + spacecraftId));
+        spacecraftService.getEntityById(spacecraftId);
 
         List<CargoManifest> activeManifests = cargoManifestRepository.findActiveCargoBySpacecraft(spacecraftId);
 
@@ -152,40 +174,29 @@ public class CargoManifestService {
 
     private CargoManifest createManifest(CargoManifestRequestDTO request, Long spacecraftId) {
         validateEntities(request, spacecraftId);
-
         return cargoManifestMapper.toEntity(request);
     }
 
     private void validateEntities(CargoManifestRequestDTO request, Long spacecraftId) {
-        spacecraftRepository.findById(spacecraftId)
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
+        spacecraftService.getEntityById(spacecraftId);
+        cargoService.getEntityById(request.cargoId());
+        storageUnitService.getEntityById(request.storageUnitId());
+        userService.getEntityById(request.loadedByUserId());
+    }
 
-        cargoRepository.findById(request.cargoId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo not found"));
-
-        storageUnitRepository.findById(request.storageUnitId())
-                .orElseThrow(() -> new DataNotFoundException("Storage unit not found"));
-
-        userRepository.findById(request.loadedByUserId())
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+    public boolean existsByCargoId(Long cargoId) {
+        return cargoManifestRepository.existsByCargoId(cargoId);
     }
 
     public CargoManifestResponseDTO toResponseDTO(CargoManifest manifest) {
-        Spacecraft spacecraft = spacecraftRepository.findById(manifest.getSpacecraftId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        Cargo cargo = cargoRepository.findById(manifest.getCargoId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo not found"));
-
-        StorageUnit storageUnit = storageUnitRepository.findById(manifest.getStorageUnitId())
-                .orElseThrow(() -> new DataNotFoundException("Storage unit not found"));
-
-        User loadedByUser = userRepository.findById(manifest.getLoadedByUserId())
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+        Spacecraft spacecraft = spacecraftService.getEntityById(manifest.getSpacecraftId());
+        Cargo cargo = cargoService.getEntityById(manifest.getCargoId());
+        StorageUnit storageUnit = storageUnitService.getEntityById(manifest.getStorageUnitId());
+        User loadedByUser = userService.getEntityById(manifest.getLoadedByUserId());
 
         String unloadedByUserName = null;
         if (manifest.getUnloadedByUserId() != null) {
-            User unloadedByUser = userRepository.findById(manifest.getUnloadedByUserId()).orElse(null);
+            User unloadedByUser = userService.getEntityByIdOrNull(manifest.getUnloadedByUserId());
             if (unloadedByUser != null) {
                 unloadedByUserName = unloadedByUser.getUsername();
             }
@@ -198,5 +209,4 @@ public class CargoManifestService {
                 loadedByUser.getUsername(),
                 unloadedByUserName);
     }
-    
 }

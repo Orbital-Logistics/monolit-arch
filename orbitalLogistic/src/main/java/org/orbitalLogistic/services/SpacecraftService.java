@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.SpacecraftRequestDTO;
 import org.orbitalLogistic.dto.response.SpacecraftResponseDTO;
@@ -12,7 +11,8 @@ import org.orbitalLogistic.exceptions.SpacecraftAlreadyExistsException;
 import org.orbitalLogistic.exceptions.SpacecraftNotFoundException;
 import org.orbitalLogistic.mappers.SpacecraftMapper;
 import org.orbitalLogistic.repositories.SpacecraftRepository;
-import org.orbitalLogistic.repositories.SpacecraftTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -21,14 +21,27 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Validated
 public class SpacecraftService {
 
     private final SpacecraftRepository spacecraftRepository;
-    private final SpacecraftTypeRepository spacecraftTypeRepository;
     private final SpacecraftMapper spacecraftMapper;
     private final JdbcTemplate jdbcTemplate;
+
+    private SpacecraftTypeService spacecraftTypeService;
+
+    public SpacecraftService(SpacecraftRepository spacecraftRepository,
+                            SpacecraftMapper spacecraftMapper,
+                            JdbcTemplate jdbcTemplate) {
+        this.spacecraftRepository = spacecraftRepository;
+        this.spacecraftMapper = spacecraftMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Autowired
+    public void setSpacecraftTypeService(@Lazy SpacecraftTypeService spacecraftTypeService) {
+        this.spacecraftTypeService = spacecraftTypeService;
+    }
 
     public PageResponseDTO<SpacecraftResponseDTO> getSpacecrafts(String name, String status, int page, int size) {
         int offset = page * size;
@@ -64,8 +77,7 @@ public class SpacecraftService {
             throw new SpacecraftAlreadyExistsException("Spacecraft with registry code already exists: " + request.registryCode());
         }
 
-        spacecraftTypeRepository.findById(request.spacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+        spacecraftTypeService.getEntityById(request.spacecraftTypeId());
 
         String sql = "INSERT INTO spacecraft " +
                      "(registry_code, name, spacecraft_type_id, mass_capacity, volume_capacity, status, current_location) " +
@@ -97,8 +109,7 @@ public class SpacecraftService {
             throw new SpacecraftAlreadyExistsException("Spacecraft with registry code already exists: " + request.registryCode());
         }
 
-        spacecraftTypeRepository.findById(request.spacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+        spacecraftTypeService.getEntityById(request.spacecraftTypeId());
 
         String sql = "UPDATE spacecraft SET " +
                      "registry_code = ?, " +
@@ -180,9 +191,13 @@ public class SpacecraftService {
         return updateSpacecraftStatus(id, SpacecraftStatus.DOCKED);
     }
 
+    public Spacecraft getEntityById(Long id) {
+        return spacecraftRepository.findById(id)
+                .orElseThrow(() -> new SpacecraftNotFoundException("Spacecraft not found with id: " + id));
+    }
+
     private SpacecraftResponseDTO toResponseDTO(Spacecraft spacecraft) {
-        SpacecraftType spacecraftType = spacecraftTypeRepository.findById(spacecraft.getSpacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+        SpacecraftType spacecraftType = spacecraftTypeService.getEntityById(spacecraft.getSpacecraftTypeId());
 
         BigDecimal currentMassUsage = calculateCurrentMassUsage(spacecraft);
         BigDecimal currentVolumeUsage = calculateCurrentVolumeUsage(spacecraft);
@@ -230,3 +245,4 @@ public class SpacecraftService {
         return spacecraft.getVolumeCapacity().subtract(currentUsage);
     }
 }
+

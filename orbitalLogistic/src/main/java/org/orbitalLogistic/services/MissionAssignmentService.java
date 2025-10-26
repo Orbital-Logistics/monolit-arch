@@ -9,13 +9,11 @@ import org.orbitalLogistic.entities.Mission;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.entities.enums.AssignmentRole;
 import org.orbitalLogistic.exceptions.MissionAssignmentNotFoundException;
-import org.orbitalLogistic.exceptions.MissionNotFoundException;
 import org.orbitalLogistic.exceptions.UserAlreadyAssignedException;
-import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.MissionAssignmentMapper;
 import org.orbitalLogistic.repositories.MissionAssignmentRepository;
-import org.orbitalLogistic.repositories.MissionRepository;
-import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +21,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class MissionAssignmentService {
 
     private final MissionAssignmentRepository missionAssignmentRepository;
-    private final MissionRepository missionRepository;
-    private final UserRepository userRepository;
     private final MissionAssignmentMapper missionAssignmentMapper;
     private final JdbcTemplate jdbcTemplate;
+
+    private MissionService missionService;
+    private UserService userService;
+
+    public MissionAssignmentService(MissionAssignmentRepository missionAssignmentRepository,
+                                   MissionAssignmentMapper missionAssignmentMapper,
+                                   JdbcTemplate jdbcTemplate) {
+        this.missionAssignmentRepository = missionAssignmentRepository;
+        this.missionAssignmentMapper = missionAssignmentMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Autowired
+    public void setMissionService(@Lazy MissionService missionService) {
+        this.missionService = missionService;
+    }
+
+    @Autowired
+    public void setUserService(@Lazy UserService userService) {
+        this.userService = userService;
+    }
 
     public PageResponseDTO<MissionAssignmentResponseDTO> getAllAssignments(int page, int size) {
         long total = missionAssignmentRepository.count();
@@ -65,8 +81,7 @@ public class MissionAssignmentService {
      */
     @Transactional
     public List<MissionAssignmentResponseDTO> assignCrew(Long missionId, MissionAssignmentRequestDTO request) {
-        missionRepository.findById(missionId)
-                .orElseThrow(() -> new MissionNotFoundException("Mission not found with id: " + missionId));
+        missionService.getEntityById(missionId);
 
         List<MissionAssignmentResponseDTO> results = List.of();
 
@@ -97,8 +112,7 @@ public class MissionAssignmentService {
     private MissionAssignment createAssignment(Long missionId, Long userId,
         org.orbitalLogistic.entities.enums.AssignmentRole role, String responsibilityZone) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DataNotFoundException("User not found with id: " + userId));
+        User user = userService.getEntityById(userId);
 
         if (missionAssignmentRepository.existsByMissionIdAndUserId(missionId, userId)) {
                 throw new UserAlreadyAssignedException(missionId, userId, user.getUsername());
@@ -131,11 +145,8 @@ public class MissionAssignmentService {
         }
 
     private MissionAssignmentResponseDTO toResponseDTO(MissionAssignment assignment) {
-        Mission mission = missionRepository.findById(assignment.getMissionId())
-                .orElseThrow(() -> new MissionNotFoundException("Mission not found"));
-
-        User user = userRepository.findById(assignment.getUserId())
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+        Mission mission = missionService.getEntityById(assignment.getMissionId());
+        User user = userService.getEntityById(assignment.getUserId());
 
         return missionAssignmentMapper.toResponseDTO(assignment,
                 mission.getMissionName(),

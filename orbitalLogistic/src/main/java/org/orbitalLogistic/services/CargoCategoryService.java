@@ -54,6 +54,11 @@ public class CargoCategoryService {
         return toResponseDTO(saved);
     }
 
+    public CargoCategory getEntityById(Long id) {
+        return cargoCategoryRepository.findById(id)
+                .orElseThrow(() -> new CargoCategoryNotFoundException("Cargo category not found with id: " + id));
+    }
+
     private CargoCategoryResponseDTO buildCategoryTree(CargoCategory category, int level) {
         List<CargoCategory> children = cargoCategoryRepository.findByParentCategoryId(category.getId());
         List<CargoCategoryResponseDTO> childrenDTOs = children.stream()
