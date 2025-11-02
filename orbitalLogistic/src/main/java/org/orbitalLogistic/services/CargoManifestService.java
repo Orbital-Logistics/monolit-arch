@@ -103,8 +103,8 @@ public class CargoManifestService {
      */
     @Transactional
     public List<CargoManifestResponseDTO> loadCargoToSpacecraft(Long spacecraftId, CargoManifestRequestDTO request) {
-        spacecraftService.getEntityById(spacecraftId);
-
+        spacecraftService.getSpacecraftById(request.spacecraftId());
+        
         List<CargoManifestResponseDTO> results = new ArrayList<>();
 
         if (request.cargoId() != null) {
@@ -119,11 +119,11 @@ public class CargoManifestService {
             for (CargoManifestRequestDTO.CargoItemDTO item : request.cargoItems()) {
                 CargoManifest manifest = CargoManifest.builder()
                         .spacecraftId(spacecraftId)
-                        .cargoId(item.cargoId())
-                        .storageUnitId(item.storageUnitId())
+                        .cargoId(cargoService.getCargoById(item.cargoId()).id())
+                        .storageUnitId(storageUnitService.getStorageUnitById(item.storageUnitId()).id())
                         .quantity(item.quantity())
                         .priority(item.priority() != null ? item.priority() : org.orbitalLogistic.entities.enums.ManifestPriority.NORMAL)
-                        .loadedByUserId(request.loadedByUserId())
+                        .loadedByUserId(userService.findUserById(request.loadedByUserId()).id())
                         .manifestStatus(ManifestStatus.LOADED)
                         .loadedAt(LocalDateTime.now())
                         .build();
@@ -144,7 +144,11 @@ public class CargoManifestService {
     @Transactional
     public List<CargoManifestResponseDTO> unloadCargoFromSpacecraft(Long spacecraftId, CargoManifestRequestDTO request) {
         spacecraftService.getEntityById(spacecraftId);
-
+        userService.getEntityById(request.loadedByUserId());
+        userService.getEntityById(request.unloadedByUserId());
+        storageUnitService.getEntityById(request.storageUnitId());
+        storageUnitService.getEntityById(request.unloadedByUserId());
+        cargoService.getCargoById(request.cargoId());
         List<CargoManifest> activeManifests = cargoManifestRepository.findActiveCargoBySpacecraft(spacecraftId);
 
         List<CargoManifestResponseDTO> results = new ArrayList<>();

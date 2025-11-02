@@ -6,6 +6,7 @@ import org.orbitalLogistic.entities.SpacecraftMission;
 import org.orbitalLogistic.entities.Spacecraft;
 import org.orbitalLogistic.entities.Mission;
 import org.orbitalLogistic.entities.User;
+import org.orbitalLogistic.exceptions.SpacecraftAssignedMissionException;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.SpacecraftMissionMapper;
 import org.orbitalLogistic.repositories.SpacecraftMissionRepository;
@@ -57,7 +58,7 @@ public class SpacecraftMissionService {
         validateEntities(missionId, request);
 
         if (spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(request.spacecraftId(), missionId)) {
-            throw new RuntimeException("Spacecraft is already assigned to this mission");
+            throw new SpacecraftAssignedMissionException("Spacecraft is already assigned to this mission");
         }
 
         SpacecraftMission spacecraftMission = SpacecraftMission.builder()

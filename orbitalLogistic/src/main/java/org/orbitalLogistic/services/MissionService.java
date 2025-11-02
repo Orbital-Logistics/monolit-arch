@@ -10,6 +10,7 @@ import org.orbitalLogistic.entities.enums.MissionPriority;
 import org.orbitalLogistic.entities.enums.MissionStatus;
 import org.orbitalLogistic.entities.enums.MissionType;
 import org.orbitalLogistic.exceptions.MissionNotFoundException;
+import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.exceptions.MissionAlreadyExistsException;
 import org.orbitalLogistic.mappers.MissionMapper;
 import org.orbitalLogistic.repositories.MissionRepository;
@@ -131,6 +132,7 @@ public class MissionService {
             throw new MissionAlreadyExistsException("Mission with code already exists: " + request.missionCode());
         }
 
+
         String sql = "UPDATE mission SET " +
                      "mission_code = ?, " +
                      "mission_name = ?, " +
@@ -149,8 +151,8 @@ public class MissionService {
                 request.missionType().name(),
                 request.status().name(),
                 request.priority().name(),
-                request.commandingOfficerId(),
-                request.spacecraftId(),
+                userService.findUserById(request.commandingOfficerId()).id(),
+                spacecraftService.getSpacecraftById(request.spacecraftId()).id(),
                 request.scheduledDeparture(),
                 request.scheduledArrival(),
                 id);
@@ -160,8 +162,8 @@ public class MissionService {
         mission.setMissionType(request.missionType());
         mission.setStatus(request.status());
         mission.setPriority(request.priority());
-        mission.setCommandingOfficerId(request.commandingOfficerId());
-        mission.setSpacecraftId(request.spacecraftId());
+        mission.setCommandingOfficerId(userService.findUserById(request.commandingOfficerId()).id());
+        mission.setSpacecraftId(spacecraftService.getSpacecraftById(request.spacecraftId()).id());
         mission.setScheduledDeparture(request.scheduledDeparture());
         mission.setScheduledArrival(request.scheduledArrival());
 

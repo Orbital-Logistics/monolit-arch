@@ -6,6 +6,7 @@ import org.orbitalLogistic.exceptions.user.UserAlreadyExistsException;
 import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,11 +20,10 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Обработка UserNotFoundException - 404 Not Found
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
         log.warn("User not found: {}", ex.getMessage());
-        
+
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.NOT_FOUND.value(),
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SpacecraftNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleSpacecraftNotFoundException(SpacecraftNotFoundException ex) {
-        log.warn("Storage unit not found: {}", ex.getMessage());
+        log.warn("Spacecraft not found: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
@@ -75,10 +75,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-    
+
+    @ExceptionHandler(CargoNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCargoNotFoundException(CargoNotFoundException ex) {
+        log.warn("Cargo not found: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
     @ExceptionHandler(CargoManifestNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCargoManifestNotFoundException(CargoManifestNotFoundException ex) {
-        log.warn("Storage unit not found: {}", ex.getMessage());
+        log.warn("Cargo Manifest not found: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
@@ -92,7 +106,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(MissionNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMissionNotFoundException(MissionNotFoundException ex) {
-        log.warn("Storage unit not found: {}", ex.getMessage());
+        log.warn("Mission not found: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
@@ -106,7 +120,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InventoryTransactionNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleInventoryTransactionNotFoundException(InventoryTransactionNotFoundException ex) {
-        log.warn("Storage unit not found: {}", ex.getMessage());
+        log.warn("Inventory transaction not found: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
@@ -117,7 +131,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-    // Обработка UserAlreadyExistsException - 409 Conflict
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
         log.warn("User already exists: {}", ex.getMessage());
@@ -132,9 +146,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
+    @ExceptionHandler(SpacecraftAssignedMissionException.class)
+    public ResponseEntity<ErrorResponse> handleSpacecraftAssignedMissionException(SpacecraftAssignedMissionException ex) {
+        log.warn("Spacecraft already assigned to this mission: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            "Conflict",
+            ex.getMessage()
+        );
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
     @ExceptionHandler(MissionAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleMissionAlreadyExistsException(MissionAlreadyExistsException ex) {
-        log.warn("User already exists: {}", ex.getMessage());
+        log.warn("Mission already exists: {}", ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
@@ -160,7 +188,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SpacecraftAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleSpacecraftAlreadyExistsException(SpacecraftAlreadyExistsException ex) {
-        log.warn("Storage unit already exists: {}", ex.getMessage());
+        log.warn("Spacecraft already exists: {}", ex.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.CONFLICT.value(),
@@ -170,7 +198,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
-    // Обработка DataNotFoundException - 404 Not Found
     @ExceptionHandler(DataNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleDataNotFoundException(DataNotFoundException ex) {
         log.warn("Data not found: {}", ex.getMessage());
@@ -185,7 +212,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
-    // Обработка ошибок валидации - 400 Bad Request
+    @ExceptionHandler(SpacecraftTypeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSpacecraftTypeNotFoundException(SpacecraftTypeNotFoundException ex) {
+        log.warn("Spacecraft type not found: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            ex.getMessage()
+        );
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
@@ -209,9 +249,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseEnum> handleInvalidEnumValue(InvalidEnumValueException ex) {
+        ErrorResponseEnum errorResponse = new ErrorResponseEnum(
+            "INVALID_ENUM_VALUE",
+            ex.getMessage(),
+            Map.of(
+                "field", ex.getFieldName(),
+                "invalidValue", ex.getInvalidValue(),
+                "acceptedValues", ex.getAcceptedValues()
+            )
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 
-
-    // Обработка всех остальных исключений - 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllUncaughtException(Exception ex) {
         log.error("Internal server error: {}", ex.getMessage(), ex);
@@ -226,7 +277,38 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
-    // DTO для ошибок
+    
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRoleNotFound(RoleNotFoundException ex) {
+        log.warn("Role not found: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(RoleAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleRoleAlreadyExists(RoleAlreadyExistsException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),
+            "Already exists",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    public record ErrorResponseEnum(
+        String code,
+        String message,
+        Map<String, Object> details
+    ) {}
+
     public record ErrorResponse(
         LocalDateTime timestamp,
         int status,
@@ -234,7 +316,6 @@ public class GlobalExceptionHandler {
         String message
     ) {}
 
-    // DTO для ошибок валидации
     public record ValidationErrorResponse(
         LocalDateTime timestamp,
         int status,
