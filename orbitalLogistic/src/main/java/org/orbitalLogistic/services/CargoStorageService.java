@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.CargoStorageRequestDTO;
 import org.orbitalLogistic.dto.response.CargoStorageResponseDTO;
@@ -9,12 +8,10 @@ import org.orbitalLogistic.entities.Cargo;
 import org.orbitalLogistic.entities.StorageUnit;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.exceptions.CargoStorageNotFoundException;
-import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.CargoStorageMapper;
 import org.orbitalLogistic.repositories.CargoStorageRepository;
-import org.orbitalLogistic.repositories.CargoRepository;
-import org.orbitalLogistic.repositories.StorageUnitRepository;
-import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,17 +19,36 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class CargoStorageService {
 
     private final CargoStorageRepository cargoStorageRepository;
-    private final CargoRepository cargoRepository;
-    private final StorageUnitRepository storageUnitRepository;
-    private final UserRepository userRepository;
     private final CargoStorageMapper cargoStorageMapper;
 
-    @Transactional(readOnly = true)
+    private CargoService cargoService;
+    private StorageUnitService storageUnitService;
+    private UserService userService;
+
+    public CargoStorageService(CargoStorageRepository cargoStorageRepository,
+                               CargoStorageMapper cargoStorageMapper) {
+        this.cargoStorageRepository = cargoStorageRepository;
+        this.cargoStorageMapper = cargoStorageMapper;
+    }
+
+    @Autowired
+    public void setCargoService(@Lazy CargoService cargoService) {
+        this.cargoService = cargoService;
+    }
+
+    @Autowired
+    public void setStorageUnitService(@Lazy StorageUnitService storageUnitService) {
+        this.storageUnitService = storageUnitService;
+    }
+
+    @Autowired
+    public void setUserService(@Lazy UserService userService) {
+        this.userService = userService;
+    }
+
     public PageResponseDTO<CargoStorageResponseDTO> getAllCargoStorage(int page, int size) {
         long total = cargoStorageRepository.count();
         List<CargoStorage> cargoStorages = (List<CargoStorage>) cargoStorageRepository.findAll();
@@ -47,7 +63,6 @@ public class CargoStorageService {
         return new PageResponseDTO<>(storageDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<CargoStorageResponseDTO> getStorageUnitCargo(Long storageUnitId, int page, int size) {
         List<CargoStorage> cargoStorages = cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(storageUnitId);
 
@@ -61,21 +76,23 @@ public class CargoStorageService {
         return new PageResponseDTO<>(storageDTOs, page, size, cargoStorages.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как метод выполняет либо INSERT, либо UPDATE
+     * в зависимости от наличия груза в хранилище. Также выполняется проверка
+     * наличия всех связанных сущностей. Все операции должны быть атомарными.
+     */
+    @Transactional
     public CargoStorageResponseDTO addCargoToStorage(CargoStorageRequestDTO request) {
-        // Validate entities exist
         validateEntities(request);
 
-        // Check if cargo already exists in this storage unit
         List<CargoStorage> existing = cargoStorageRepository.findByStorageUnitIdAndCargoId(
                 request.storageUnitId(), request.cargoId());
 
         CargoStorage cargoStorage;
         if (!existing.isEmpty()) {
-            // Update existing storage record
             cargoStorage = existing.get(0);
             cargoStorage.setQuantity(cargoStorage.getQuantity() + request.quantity());
         } else {
-            // Create new storage record
             cargoStorage = cargoStorageMapper.toEntity(request);
         }
 
@@ -83,12 +100,10 @@ public class CargoStorageService {
         return toResponseDTO(saved);
     }
 
-    @Transactional
     public CargoStorageResponseDTO updateQuantity(Long id, CargoStorageRequestDTO request) {
         CargoStorage cargoStorage = cargoStorageRepository.findById(id)
                 .orElseThrow(() -> new CargoStorageNotFoundException("Cargo storage not found with id: " + id));
 
-        // Update quantity and tracking info
         cargoStorage.setQuantity(request.quantity());
         cargoStorage.setLastInventoryCheck(LocalDateTime.now());
 
@@ -100,29 +115,37 @@ public class CargoStorageService {
         return toResponseDTO(updated);
     }
 
-    private void validateEntities(CargoStorageRequestDTO request) {
-        cargoRepository.findById(request.cargoId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo not found"));
+    public Integer calculateTotalQuantityForCargo(Long cargoId) {
+        return cargoStorageRepository.findByCargoId(cargoId)
+                .stream()
+                .mapToInt(storage -> storage.getQuantity() != null ? storage.getQuantity() : 0)
+                .sum();
+    }
 
-        storageUnitRepository.findById(request.storageUnitId())
-                .orElseThrow(() -> new DataNotFoundException("Storage unit not found"));
+    public List<CargoStorage> findByStorageUnitIdOrderByStoredAt(Long storageUnitId) {
+        return cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(storageUnitId);
+    }
+
+    public long countByStorageUnitId(Long storageUnitId) {
+        return cargoStorageRepository.countByStorageUnitId(storageUnitId);
+    }
+
+    private void validateEntities(CargoStorageRequestDTO request) {
+        cargoService.getEntityById(request.cargoId());
+        storageUnitService.getEntityById(request.storageUnitId());
 
         if (request.updatedByUserId() != null) {
-            userRepository.findById(request.updatedByUserId())
-                    .orElseThrow(() -> new DataNotFoundException("User not found"));
+            userService.getEntityById(request.updatedByUserId());
         }
     }
 
     private CargoStorageResponseDTO toResponseDTO(CargoStorage cargoStorage) {
-        StorageUnit storageUnit = storageUnitRepository.findById(cargoStorage.getStorageUnitId())
-                .orElseThrow(() -> new DataNotFoundException("Storage unit not found"));
-
-        Cargo cargo = cargoRepository.findById(cargoStorage.getCargoId())
-                .orElseThrow(() -> new DataNotFoundException("Cargo not found"));
+        StorageUnit storageUnit = storageUnitService.getEntityById(cargoStorage.getStorageUnitId());
+        Cargo cargo = cargoService.getEntityById(cargoStorage.getCargoId());
 
         String lastCheckedByUserName = null;
         if (cargoStorage.getLastCheckedByUserId() != null) {
-            User user = userRepository.findById(cargoStorage.getLastCheckedByUserId()).orElse(null);
+            User user = userService.getEntityByIdOrNull(cargoStorage.getLastCheckedByUserId());
             if (user != null) {
                 lastCheckedByUserName = user.getUsername();
             }

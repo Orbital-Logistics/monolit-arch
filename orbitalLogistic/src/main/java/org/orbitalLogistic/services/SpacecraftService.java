@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.SpacecraftRequestDTO;
 import org.orbitalLogistic.dto.response.SpacecraftResponseDTO;
@@ -12,27 +11,38 @@ import org.orbitalLogistic.exceptions.SpacecraftAlreadyExistsException;
 import org.orbitalLogistic.exceptions.SpacecraftNotFoundException;
 import org.orbitalLogistic.mappers.SpacecraftMapper;
 import org.orbitalLogistic.repositories.SpacecraftRepository;
-import org.orbitalLogistic.repositories.SpacecraftTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 @Validated
 public class SpacecraftService {
 
     private final SpacecraftRepository spacecraftRepository;
-    private final SpacecraftTypeRepository spacecraftTypeRepository;
     private final SpacecraftMapper spacecraftMapper;
-    private final JdbcTemplate jdbcTemplate; // Добавляем JdbcTemplate
+    private final JdbcTemplate jdbcTemplate;
 
-    @Transactional(readOnly = true)
+    private SpacecraftTypeService spacecraftTypeService;
+
+    public SpacecraftService(SpacecraftRepository spacecraftRepository,
+                            SpacecraftMapper spacecraftMapper,
+                            JdbcTemplate jdbcTemplate) {
+        this.spacecraftRepository = spacecraftRepository;
+        this.spacecraftMapper = spacecraftMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Autowired
+    public void setSpacecraftTypeService(@Lazy SpacecraftTypeService spacecraftTypeService) {
+        this.spacecraftTypeService = spacecraftTypeService;
+    }
+
     public PageResponseDTO<SpacecraftResponseDTO> getSpacecrafts(String name, String status, int page, int size) {
         int offset = page * size;
         List<Spacecraft> spacecrafts = spacecraftRepository.findWithFilters(name, status, size, offset);
@@ -46,7 +56,6 @@ public class SpacecraftService {
         return new PageResponseDTO<>(spacecraftDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public List<SpacecraftResponseDTO> getSpacecraftsScroll(int page, int size) {
         int offset = page * size;
         List<Spacecraft> spacecrafts = spacecraftRepository.findWithFilters(null, null, size + 1, offset);
@@ -57,7 +66,6 @@ public class SpacecraftService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public SpacecraftResponseDTO getSpacecraftById(Long id) {
         Spacecraft spacecraft = spacecraftRepository.findById(id)
                 .orElseThrow(() -> new SpacecraftNotFoundException("Spacecraft not found with id: " + id));
@@ -69,10 +77,8 @@ public class SpacecraftService {
             throw new SpacecraftAlreadyExistsException("Spacecraft with registry code already exists: " + request.registryCode());
         }
 
-        SpacecraftType spacecraftType = spacecraftTypeRepository.findById(request.spacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+        spacecraftTypeService.getEntityById(request.spacecraftTypeId());
 
-        // Используем JdbcTemplate для создания с явным CAST enum
         String sql = "INSERT INTO spacecraft " +
                      "(registry_code, name, spacecraft_type_id, mass_capacity, volume_capacity, status, current_location) " +
                      "VALUES (?, ?, ?, ?, ?, ?::spacecraft_status_enum, ?) " +
@@ -84,11 +90,10 @@ public class SpacecraftService {
                 request.spacecraftTypeId(),
                 request.massCapacity(),
                 request.volumeCapacity(),
-                request.status().name(), // Преобразуем enum в string
+                request.status().name(),
                 request.currentLocation()
         );
 
-        // Получаем созданную запись
         Spacecraft saved = spacecraftRepository.findById(newId)
                 .orElseThrow(() -> new DataNotFoundException("Failed to create spacecraft"));
 
@@ -104,17 +109,15 @@ public class SpacecraftService {
             throw new SpacecraftAlreadyExistsException("Spacecraft with registry code already exists: " + request.registryCode());
         }
 
-        SpacecraftType spacecraftType = spacecraftTypeRepository.findById(request.spacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+        spacecraftTypeService.getEntityById(request.spacecraftTypeId());
 
-        // Используем JdbcTemplate для обновления с явным CAST enum
         String sql = "UPDATE spacecraft SET " +
                      "registry_code = ?, " +
                      "name = ?, " +
                      "spacecraft_type_id = ?, " +
                      "mass_capacity = ?, " +
                      "volume_capacity = ?, " +
-                     "status = ?::spacecraft_status_enum, " + // Явное приведение типа
+                     "status = ?::spacecraft_status_enum, " +
                      "current_location = ? " +
                      "WHERE id = ?";
         
@@ -124,12 +127,11 @@ public class SpacecraftService {
                 request.spacecraftTypeId(),
                 request.massCapacity(),
                 request.volumeCapacity(),
-                request.status().name(), // Преобразуем enum в string
+                request.status().name(),
                 request.currentLocation(),
                 id
         );
 
-        // Обновляем объект для возврата
         spacecraft.setRegistryCode(request.registryCode());
         spacecraft.setName(request.name());
         spacecraft.setSpacecraftTypeId(request.spacecraftTypeId());
@@ -148,7 +150,6 @@ public class SpacecraftService {
         spacecraftRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
     public List<SpacecraftResponseDTO> getAvailableSpacecrafts() {
         return spacecraftRepository.findAvailableForMission().stream()
                 .map(this::toResponseDTO)
@@ -159,15 +160,12 @@ public class SpacecraftService {
         Spacecraft spacecraft = spacecraftRepository.findById(id)
                 .orElseThrow(() -> new SpacecraftNotFoundException("Spacecraft not found with id: " + id));
 
-        // Используем JdbcTemplate для обновления статуса
         String sql = "UPDATE spacecraft SET status = ?::spacecraft_status_enum WHERE id = ?";
         jdbcTemplate.update(sql, status.name(), id);
 
         spacecraft.setStatus(status);
         return toResponseDTO(spacecraft);
     }
-
-    // Дополнительные методы для бизнес-логики
 
     public SpacecraftResponseDTO changeSpacecraftLocation(Long id, String newLocation) {
         Spacecraft spacecraft = spacecraftRepository.findById(id)
@@ -193,11 +191,14 @@ public class SpacecraftService {
         return updateSpacecraftStatus(id, SpacecraftStatus.DOCKED);
     }
 
-    private SpacecraftResponseDTO toResponseDTO(Spacecraft spacecraft) {
-        SpacecraftType spacecraftType = spacecraftTypeRepository.findById(spacecraft.getSpacecraftTypeId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft type not found"));
+    public Spacecraft getEntityById(Long id) {
+        return spacecraftRepository.findById(id)
+                .orElseThrow(() -> new SpacecraftNotFoundException("Spacecraft not found with id: " + id));
+    }
 
-        // Calculate current usage (simplified - you might want to implement actual logic)
+    private SpacecraftResponseDTO toResponseDTO(Spacecraft spacecraft) {
+        SpacecraftType spacecraftType = spacecraftTypeService.getEntityById(spacecraft.getSpacecraftTypeId());
+
         BigDecimal currentMassUsage = calculateCurrentMassUsage(spacecraft);
         BigDecimal currentVolumeUsage = calculateCurrentVolumeUsage(spacecraft);
 
@@ -211,7 +212,6 @@ public class SpacecraftService {
     }
 
     private BigDecimal calculateCurrentMassUsage(Spacecraft spacecraft) {
-        // Реализация расчета текущей загрузки массы
         String sql = "SELECT COALESCE(SUM(cm.quantity * c.mass_per_unit), 0) " +
                      "FROM cargo_manifest cm " +
                      "JOIN cargo c ON cm.cargo_id = c.id " +
@@ -221,7 +221,6 @@ public class SpacecraftService {
     }
 
     private BigDecimal calculateCurrentVolumeUsage(Spacecraft spacecraft) {
-        // Реализация расчета текущей загрузки объема
         String sql = "SELECT COALESCE(SUM(cm.quantity * c.volume_per_unit), 0) " +
                      "FROM cargo_manifest cm " +
                      "JOIN cargo c ON cm.cargo_id = c.id " +
@@ -246,3 +245,4 @@ public class SpacecraftService {
         return spacecraft.getVolumeCapacity().subtract(currentUsage);
     }
 }
+

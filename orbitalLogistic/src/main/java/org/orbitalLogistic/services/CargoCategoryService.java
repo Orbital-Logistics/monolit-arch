@@ -16,13 +16,11 @@ import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CargoCategoryService {
 
     private final CargoCategoryRepository cargoCategoryRepository;
     private final CargoCategoryMapper cargoCategoryMapper;
 
-    @Transactional(readOnly = true)
     public List<CargoCategoryResponseDTO> getAllCategories() {
         List<CargoCategory> categories = (List<CargoCategory>) cargoCategoryRepository.findAll();
         return categories.stream()
@@ -30,13 +28,13 @@ public class CargoCategoryService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public CargoCategoryResponseDTO getCategoryById(Long id) {
         CargoCategory category = cargoCategoryRepository.findById(id)
                 .orElseThrow(() -> new CargoCategoryNotFoundException("Cargo category not found with id: " + id));
         return toResponseDTO(category);
     }
 
+    // Метод требует @Transactional, так как выполняет множественные запросы к БД для построения дерева категорий с children.
     @Transactional(readOnly = true)
     public List<CargoCategoryResponseDTO> getCategoryTree() {
         List<CargoCategory> rootCategories = cargoCategoryRepository.findByParentCategoryIdIsNull();
@@ -46,7 +44,6 @@ public class CargoCategoryService {
     }
 
     public CargoCategoryResponseDTO createCategory(CargoCategoryRequestDTO request) {
-        // Validate parent category exists if specified
         if (request.parentCategoryId() != null) {
             cargoCategoryRepository.findById(request.parentCategoryId())
                     .orElseThrow(() -> new DataNotFoundException("Parent category not found"));
@@ -55,6 +52,11 @@ public class CargoCategoryService {
         CargoCategory category = cargoCategoryMapper.toEntity(request);
         CargoCategory saved = cargoCategoryRepository.save(category);
         return toResponseDTO(saved);
+    }
+
+    public CargoCategory getEntityById(Long id) {
+        return cargoCategoryRepository.findById(id)
+                .orElseThrow(() -> new CargoCategoryNotFoundException("Cargo category not found with id: " + id));
     }
 
     private CargoCategoryResponseDTO buildCategoryTree(CargoCategory category, int level) {

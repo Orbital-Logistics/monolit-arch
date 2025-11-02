@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.MaintenanceLogRequestDTO;
 import org.orbitalLogistic.dto.response.MaintenanceLogResponseDTO;
@@ -10,11 +9,10 @@ import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.entities.enums.MaintenanceStatus;
 import org.orbitalLogistic.entities.enums.SpacecraftStatus;
 import org.orbitalLogistic.exceptions.MaintenanceLogNotFoundException;
-import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.MaintenanceLogMapper;
 import org.orbitalLogistic.repositories.MaintenanceLogRepository;
-import org.orbitalLogistic.repositories.SpacecraftRepository;
-import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +20,30 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class MaintenanceLogService {
 
     private final MaintenanceLogRepository maintenanceLogRepository;
-    private final SpacecraftRepository spacecraftRepository;
-    private final UserRepository userRepository;
     private final MaintenanceLogMapper maintenanceLogMapper;
 
-    @Transactional(readOnly = true)
+    private SpacecraftService spacecraftService;
+    private UserService userService;
+
+    public MaintenanceLogService(MaintenanceLogRepository maintenanceLogRepository,
+                                MaintenanceLogMapper maintenanceLogMapper) {
+        this.maintenanceLogRepository = maintenanceLogRepository;
+        this.maintenanceLogMapper = maintenanceLogMapper;
+    }
+
+    @Autowired
+    public void setSpacecraftService(@Lazy SpacecraftService spacecraftService) {
+        this.spacecraftService = spacecraftService;
+    }
+
+    @Autowired
+    public void setUserService(@Lazy UserService userService) {
+        this.userService = userService;
+    }
+
     public PageResponseDTO<MaintenanceLogResponseDTO> getAllMaintenanceLogs(int page, int size) {
         long total = maintenanceLogRepository.count();
         List<MaintenanceLog> logs = (List<MaintenanceLog>) maintenanceLogRepository.findAll();
@@ -46,7 +58,6 @@ public class MaintenanceLogService {
         return new PageResponseDTO<>(logDTOs, page, size, total, totalPages, page == 0, page >= totalPages - 1);
     }
 
-    @Transactional(readOnly = true)
     public PageResponseDTO<MaintenanceLogResponseDTO> getSpacecraftMaintenanceHistory(Long spacecraftId, int page, int size) {
         List<MaintenanceLog> logs = maintenanceLogRepository.findBySpacecraftIdOrderByStartTime(spacecraftId);
 
@@ -60,19 +71,28 @@ public class MaintenanceLogService {
         return new PageResponseDTO<>(logDTOs, page, size, logs.size(), totalPages, page == 0, page >= totalPages - 1);
     }
 
+    /**
+     * Требует @Transactional, так как кроме создания записи о техобслуживании
+     * может обновлять статус космического корабля. Обе операции должны выполниться атомарно.
+     */
+    @Transactional
     public MaintenanceLogResponseDTO createMaintenanceLog(MaintenanceLogRequestDTO request) {
         validateEntities(request);
 
         MaintenanceLog maintenanceLog = maintenanceLogMapper.toEntity(request);
 
         if (request.startTime() != null && request.startTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
-            updateSpacecraftStatus(request.spacecraftId(), SpacecraftStatus.MAINTENANCE);
+            spacecraftService.updateSpacecraftStatus(request.spacecraftId(), SpacecraftStatus.MAINTENANCE);
         }
 
         MaintenanceLog saved = maintenanceLogRepository.save(maintenanceLog);
         return toResponseDTO(saved);
     }
 
+    /**
+     * Требует @Transactional, так как обновляет запись техобслуживания
+     * и может изменять статус космического корабля. Обе операции должны быть атомарными.
+     */
     @Transactional
     public MaintenanceLogResponseDTO updateMaintenanceStatus(Long id, MaintenanceLogRequestDTO request) {
         MaintenanceLog maintenanceLog = maintenanceLogRepository.findById(id)
@@ -92,7 +112,7 @@ public class MaintenanceLogService {
 
         if (request.newSpacecraftStatus() != null) {
             maintenanceLog.setStatus(MaintenanceStatus.COMPLETED);
-            updateSpacecraftStatus(maintenanceLog.getSpacecraftId(), request.newSpacecraftStatus());
+            spacecraftService.updateSpacecraftStatus(maintenanceLog.getSpacecraftId(), request.newSpacecraftStatus());
         }
 
         MaintenanceLog updated = maintenanceLogRepository.save(maintenanceLog);
@@ -100,41 +120,25 @@ public class MaintenanceLogService {
     }
 
     private void validateEntities(MaintenanceLogRequestDTO request) {
-        spacecraftRepository.findById(request.spacecraftId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        userRepository.findById(request.performedByUserId())
-                .orElseThrow(() -> new DataNotFoundException("Performed by user not found"));
+        spacecraftService.getEntityById(request.spacecraftId());
+        userService.getEntityById(request.performedByUserId());
 
         if (request.supervisedByUserId() != null) {
-            userRepository.findById(request.supervisedByUserId())
-                    .orElseThrow(() -> new DataNotFoundException("Supervised by user not found"));
+            userService.getEntityById(request.supervisedByUserId());
         }
 
         if (request.completedByUserId() != null) {
-            userRepository.findById(request.completedByUserId())
-                    .orElseThrow(() -> new DataNotFoundException("Completed by user not found"));
+            userService.getEntityById(request.completedByUserId());
         }
     }
 
-    private void updateSpacecraftStatus(Long spacecraftId, SpacecraftStatus status) {
-        Spacecraft spacecraft = spacecraftRepository.findById(spacecraftId)
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        spacecraft.setStatus(status);
-        spacecraftRepository.save(spacecraft);
-    }
-
     private MaintenanceLogResponseDTO toResponseDTO(MaintenanceLog maintenanceLog) {
-        Spacecraft spacecraft = spacecraftRepository.findById(maintenanceLog.getSpacecraftId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        User performedByUser = userRepository.findById(maintenanceLog.getPerformedByUserId())
-                .orElseThrow(() -> new DataNotFoundException("Performed by user not found"));
+        Spacecraft spacecraft = spacecraftService.getEntityById(maintenanceLog.getSpacecraftId());
+        User performedByUser = userService.getEntityById(maintenanceLog.getPerformedByUserId());
 
         String supervisedByUserName = null;
         if (maintenanceLog.getSupervisedByUserId() != null) {
-            User supervisedByUser = userRepository.findById(maintenanceLog.getSupervisedByUserId()).orElse(null);
+            User supervisedByUser = userService.getEntityByIdOrNull(maintenanceLog.getSupervisedByUserId());
             if (supervisedByUser != null) {
                 supervisedByUserName = supervisedByUser.getUsername();
             }

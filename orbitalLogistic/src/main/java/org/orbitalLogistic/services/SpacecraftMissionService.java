@@ -1,6 +1,5 @@
 package org.orbitalLogistic.services;
 
-import lombok.RequiredArgsConstructor;
 import org.orbitalLogistic.dto.request.SpacecraftMissionRequestDTO;
 import org.orbitalLogistic.dto.response.SpacecraftMissionResponseDTO;
 import org.orbitalLogistic.entities.SpacecraftMission;
@@ -10,26 +9,43 @@ import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
 import org.orbitalLogistic.mappers.SpacecraftMissionMapper;
 import org.orbitalLogistic.repositories.SpacecraftMissionRepository;
-import org.orbitalLogistic.repositories.SpacecraftRepository;
-import org.orbitalLogistic.repositories.MissionRepository;
-import org.orbitalLogistic.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class SpacecraftMissionService {
 
     private final SpacecraftMissionRepository spacecraftMissionRepository;
-    private final SpacecraftRepository spacecraftRepository;
-    private final MissionRepository missionRepository;
-    private final UserRepository userRepository;
     private final SpacecraftMissionMapper spacecraftMissionMapper;
 
-    @Transactional(readOnly = true)
+    private SpacecraftService spacecraftService;
+    private MissionService missionService;
+    private UserService userService;
+
+    public SpacecraftMissionService(SpacecraftMissionRepository spacecraftMissionRepository,
+                                   SpacecraftMissionMapper spacecraftMissionMapper) {
+        this.spacecraftMissionRepository = spacecraftMissionRepository;
+        this.spacecraftMissionMapper = spacecraftMissionMapper;
+    }
+
+    @Autowired
+    public void setSpacecraftService(@Lazy SpacecraftService spacecraftService) {
+        this.spacecraftService = spacecraftService;
+    }
+
+    @Autowired
+    public void setMissionService(@Lazy MissionService missionService) {
+        this.missionService = missionService;
+    }
+
+    @Autowired
+    public void setUserService(@Lazy UserService userService) {
+        this.userService = userService;
+    }
+
     public List<SpacecraftMissionResponseDTO> getMissionBackupSpacecrafts(Long missionId) {
         List<SpacecraftMission> spacecraftMissions = spacecraftMissionRepository.findByMissionIdOrderBySpacecraftName(missionId);
         return spacecraftMissions.stream()
@@ -37,11 +53,9 @@ public class SpacecraftMissionService {
                 .toList();
     }
 
-    @Transactional
     public SpacecraftMissionResponseDTO addBackupSpacecraft(Long missionId, SpacecraftMissionRequestDTO request) {
         validateEntities(missionId, request);
 
-        // Check if spacecraft is already assigned to this mission
         if (spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(request.spacecraftId(), missionId)) {
             throw new RuntimeException("Spacecraft is already assigned to this mission");
         }
@@ -55,7 +69,6 @@ public class SpacecraftMissionService {
         return toResponseDTO(saved, request.roleDescription(), request.assignedByUserId());
     }
 
-    @Transactional
     public void removeBackupSpacecraft(Long missionId, Long spacecraftId) {
         if (!spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(spacecraftId, missionId)) {
             throw new DataNotFoundException("Spacecraft assignment not found for this mission");
@@ -64,14 +77,9 @@ public class SpacecraftMissionService {
     }
 
     private void validateEntities(Long missionId, SpacecraftMissionRequestDTO request) {
-        missionRepository.findById(missionId)
-                .orElseThrow(() -> new DataNotFoundException("Mission not found"));
-
-        spacecraftRepository.findById(request.spacecraftId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        userRepository.findById(request.assignedByUserId())
-                .orElseThrow(() -> new DataNotFoundException("User not found"));
+        missionService.getEntityById(missionId);
+        spacecraftService.getEntityById(request.spacecraftId());
+        userService.getEntityById(request.assignedByUserId());
     }
 
     private SpacecraftMissionResponseDTO toResponseDTO(SpacecraftMission spacecraftMission) {
@@ -80,15 +88,12 @@ public class SpacecraftMissionService {
 
     private SpacecraftMissionResponseDTO toResponseDTO(SpacecraftMission spacecraftMission,
                                                       String roleDescription, Long assignedByUserId) {
-        Spacecraft spacecraft = spacecraftRepository.findById(spacecraftMission.getSpacecraftId())
-                .orElseThrow(() -> new DataNotFoundException("Spacecraft not found"));
-
-        Mission mission = missionRepository.findById(spacecraftMission.getMissionId())
-                .orElseThrow(() -> new DataNotFoundException("Mission not found"));
+        Spacecraft spacecraft = spacecraftService.getEntityById(spacecraftMission.getSpacecraftId());
+        Mission mission = missionService.getEntityById(spacecraftMission.getMissionId());
 
         String assignedByUserName = null;
         if (assignedByUserId != null) {
-            User user = userRepository.findById(assignedByUserId).orElse(null);
+            User user = userService.getEntityByIdOrNull(assignedByUserId);
             if (user != null) {
                 assignedByUserName = user.getUsername();
             }
