@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("role")
@@ -22,4 +23,7 @@ public class UserRole {
     @NotBlank
     @Size(max = 50)
     private String name;
+
+    @Column("description")
+    private String description;
 }
