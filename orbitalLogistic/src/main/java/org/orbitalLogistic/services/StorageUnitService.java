@@ -5,6 +5,8 @@ import org.orbitalLogistic.dto.request.StorageUnitRequestDTO;
 import org.orbitalLogistic.dto.response.StorageUnitResponseDTO;
 import org.orbitalLogistic.dto.response.CargoStorageResponseDTO;
 import org.orbitalLogistic.entities.StorageUnit;
+import org.orbitalLogistic.entities.enums.StorageTypeEnum;
+import org.orbitalLogistic.exceptions.InvalidEnumValueException;
 import org.orbitalLogistic.exceptions.StorageUnitAlreadyExistsException;
 import org.orbitalLogistic.exceptions.StorageUnitNotFoundException;
 import org.orbitalLogistic.mappers.StorageUnitMapper;
@@ -13,8 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -89,6 +93,15 @@ public class StorageUnitService {
         if (!storageUnit.getUnitCode().equals(request.unitCode()) && 
             storageUnitRepository.existsByUnitCode(request.unitCode())) {
             throw new StorageUnitAlreadyExistsException("Storage unit with code already exists: " + request.unitCode());
+        }
+
+        try {
+            StorageTypeEnum.valueOf(request.storageType().name());
+        } catch (IllegalArgumentException e) {
+            String[] acceptedValues = Arrays.stream(StorageTypeEnum.values())
+                    .map(Enum::name)
+                    .toArray(String[]::new);
+            throw new InvalidEnumValueException("storageType", request.storageType().name(), acceptedValues);
         }
 
         String sql = "UPDATE storage_unit SET " +

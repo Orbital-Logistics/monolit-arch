@@ -86,7 +86,7 @@ public class CargoStorageService {
         validateEntities(request);
 
         List<CargoStorage> existing = cargoStorageRepository.findByStorageUnitIdAndCargoId(
-                request.storageUnitId(), request.cargoId());
+                request.storageUnitId(), cargoService.getCargoById(request.cargoId()).id());
 
         CargoStorage cargoStorage;
         if (!existing.isEmpty()) {
@@ -108,7 +108,7 @@ public class CargoStorageService {
         cargoStorage.setLastInventoryCheck(LocalDateTime.now());
 
         if (request.updatedByUserId() != null) {
-            cargoStorage.setLastCheckedByUserId(request.updatedByUserId());
+            cargoStorage.setLastCheckedByUserId(userService.findUserById(request.updatedByUserId()).id());
         }
 
         CargoStorage updated = cargoStorageRepository.save(cargoStorage);
