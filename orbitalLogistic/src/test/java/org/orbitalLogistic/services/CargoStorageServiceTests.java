@@ -6,9 +6,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.orbitalLogistic.dto.common.PageResponseDTO;
 import org.orbitalLogistic.dto.request.CargoStorageRequestDTO;
 import org.orbitalLogistic.dto.response.CargoStorageResponseDTO;
+import org.orbitalLogistic.dto.response.CargoResponseDTO;
+import org.orbitalLogistic.dto.response.UserResponseDTO;
+import org.orbitalLogistic.entities.enums.CargoType;
+import org.orbitalLogistic.entities.enums.HazardLevel;
+import java.math.BigDecimal;
 import org.orbitalLogistic.entities.Cargo;
 import org.orbitalLogistic.entities.CargoStorage;
 import org.orbitalLogistic.entities.StorageUnit;
@@ -30,19 +37,20 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CargoStorageServiceTests {
 
     @Mock
     private CargoStorageRepository cargoStorageRepository;
 
     @Mock
-    private CargoRepository cargoRepository;
+    private CargoService cargoService;
 
     @Mock
-    private StorageUnitRepository storageUnitRepository;
+    private StorageUnitService storageUnitService;
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Mock
     private CargoStorageMapper cargoStorageMapper;
@@ -96,6 +104,27 @@ class CargoStorageServiceTests {
         testRequestDTO = new CargoStorageRequestDTO(
                 1L, 1L, 100, 1L, "Transfer", "Moving cargo"
         );
+
+        cargoStorageService.setCargoService(cargoService);
+        cargoStorageService.setStorageUnitService(storageUnitService);
+        cargoStorageService.setUserService(userService);
+
+        lenient().when(cargoService.getCargoById(anyLong())).thenReturn(
+                new CargoResponseDTO(
+                        1L,
+                        "Scientific Equipment",
+                        "Electronics",
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        CargoType.SCIENTIFIC,
+                        HazardLevel.LOW,
+                        0
+                )
+        );
+        lenient().when(userService.findUserById(anyLong())).thenReturn(
+                new UserResponseDTO(1L, "john.doe@example.com", "John Doe")
+        );
+        lenient().when(userService.getEntityByIdOrNull(any())).thenReturn(testUser);
     }
 
     @Test
@@ -104,11 +133,11 @@ class CargoStorageServiceTests {
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.count()).thenReturn(1L);
         when(cargoStorageRepository.findAll()).thenReturn(cargoStorages);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityByIdOrNull(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
-                eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
+                eq("Warehouse A"), eq("Scientific Equipment"), any()))
                 .thenReturn(testResponseDTO);
 
 
@@ -147,9 +176,9 @@ class CargoStorageServiceTests {
 
         List<CargoStorage> cargoStorages = List.of(testCargoStorage);
         when(cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(1L)).thenReturn(cargoStorages);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityByIdOrNull(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
@@ -192,16 +221,16 @@ class CargoStorageServiceTests {
                 .storedAt(LocalDateTime.now())
                 .build();
 
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(userService.getEntityByIdOrNull(1L)).thenReturn(testUser);
         when(cargoStorageRepository.findByStorageUnitIdAndCargoId(1L, 1L)).thenReturn(List.of());
         when(cargoStorageMapper.toEntity(testRequestDTO)).thenReturn(newCargoStorage);
         when(cargoStorageRepository.save(newCargoStorage)).thenReturn(testCargoStorage);
 
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityById(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
@@ -213,9 +242,9 @@ class CargoStorageServiceTests {
         assertNotNull(result);
         assertEquals(100, result.quantity());
 
-        verify(cargoRepository, times(2)).findById(1L);
-        verify(storageUnitRepository, times(2)).findById(1L);
-        verify(userRepository, times(2)).findById(1L);
+        verify(cargoService, times(2)).getEntityById(1L);
+        verify(storageUnitService, times(2)).getEntityById(1L);
+        verify(userService, times(1)).getEntityById(1L);
         verify(cargoStorageRepository, times(1)).findByStorageUnitIdAndCargoId(1L, 1L);
         verify(cargoStorageMapper, times(1)).toEntity(testRequestDTO);
         verify(cargoStorageRepository, times(1)).save(newCargoStorage);
@@ -224,12 +253,11 @@ class CargoStorageServiceTests {
     @Test
     void addCargoToStorage_WithInvalidCargo_ShouldThrowException() {
 
-        when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
+        when(cargoService.getEntityById(999L)).thenThrow(new DataNotFoundException("Cargo not found"));
 
         CargoStorageRequestDTO requestWithInvalidCargo = new CargoStorageRequestDTO(
                 1L, 999L, 100, 1L, "Transfer", "Moving cargo"
         );
-
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -237,20 +265,19 @@ class CargoStorageServiceTests {
         );
 
         assertEquals("Cargo not found", exception.getMessage());
-        verify(cargoRepository, times(1)).findById(999L);
+        verify(cargoService, times(1)).getEntityById(999L);
         verify(cargoStorageRepository, never()).save(any());
     }
 
     @Test
     void addCargoToStorage_WithInvalidStorageUnit_ShouldThrowException() {
 
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(storageUnitRepository.findById(999L)).thenReturn(Optional.empty());
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(storageUnitService.getEntityById(999L)).thenThrow(new DataNotFoundException("Storage unit not found"));
 
         CargoStorageRequestDTO requestWithInvalidStorageUnit = new CargoStorageRequestDTO(
                 999L, 1L, 100, 1L, "Transfer", "Moving cargo"
         );
-
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -258,21 +285,20 @@ class CargoStorageServiceTests {
         );
 
         assertEquals("Storage unit not found", exception.getMessage());
-        verify(storageUnitRepository, times(1)).findById(999L);
+        verify(storageUnitService, times(1)).getEntityById(999L);
         verify(cargoStorageRepository, never()).save(any());
     }
 
     @Test
     void addCargoToStorage_WithInvalidUser_ShouldThrowException() {
 
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(userService.getEntityById(999L)).thenThrow(new DataNotFoundException("User not found"));
 
         CargoStorageRequestDTO requestWithInvalidUser = new CargoStorageRequestDTO(
                 1L, 1L, 100, 999L, "Transfer", "Moving cargo"
         );
-
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -280,7 +306,7 @@ class CargoStorageServiceTests {
         );
 
         assertEquals("User not found", exception.getMessage());
-        verify(userRepository, times(1)).findById(999L);
+        verify(userService, times(1)).getEntityById(999L);
         verify(cargoStorageRepository, never()).save(any());
     }
 
@@ -298,21 +324,19 @@ class CargoStorageServiceTests {
                 .storedAt(LocalDateTime.now())
                 .build();
 
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
         when(cargoStorageRepository.findByStorageUnitIdAndCargoId(1L, 1L)).thenReturn(List.of());
         when(cargoStorageMapper.toEntity(requestWithNullUser)).thenReturn(newCargoStorage);
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(testCargoStorage);
 
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
-                eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
+                eq("Warehouse A"), eq("Scientific Equipment"), any()))
                 .thenReturn(testResponseDTO);
 
-
         CargoStorageResponseDTO result = cargoStorageService.addCargoToStorage(requestWithNullUser);
-
 
         assertNotNull(result);
 
@@ -326,7 +350,6 @@ class CargoStorageServiceTests {
                 1L, 1L, 200, 1L, "Update", "Updating quantity"
         );
 
-
         CargoStorage updatedStorage = CargoStorage.builder()
                 .id(1L)
                 .cargoId(1L)
@@ -339,16 +362,14 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(testCargoStorage));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(updatedStorage);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityById(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                 eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
 
-
         CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, updateRequest);
-
 
         assertNotNull(result);
         verify(cargoStorageRepository, times(1)).findById(1L);
@@ -381,15 +402,15 @@ class CargoStorageServiceTests {
                 .quantity(50)
                 .build();
 
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(userRepository.findById(any())).thenReturn(Optional.of(testUser));
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(userService.getEntityById(any())).thenReturn(testUser);
         when(cargoStorageRepository.findByStorageUnitIdAndCargoId(1L, 1L)).thenReturn(List.of(existingStorage));
         when(cargoStorageRepository.save(existingStorage)).thenReturn(existingStorage);
 
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityById(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), anyString(), anyString(), anyString(), any()))
                 .thenReturn(testResponseDTO);
 
@@ -402,7 +423,7 @@ class CargoStorageServiceTests {
         verify(cargoStorageRepository, times(1)).save(existingStorage);
         verify(cargoStorageMapper, never()).toEntity(any());
 
-        verify(cargoRepository, times(2)).findById(1L);
+        verify(cargoService, times(2)).getEntityById(1L);
     }
 
     @Test
@@ -423,8 +444,8 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(cargoStorageWithNullUser));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(cargoStorageWithNullUser);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
 
         when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                 eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
@@ -452,11 +473,11 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(testCargoStorage));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(savedCargoStorage);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        when(userService.getEntityById(1L)).thenReturn(testUser);
         when(cargoStorageMapper.toResponseDTO(eq(savedCargoStorage), eq("SU-001"),
-                eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
+                eq("Warehouse A"), eq("Scientific Equipment"), any()))
                 .thenReturn(testResponseDTO);
 
 
@@ -468,9 +489,9 @@ class CargoStorageServiceTests {
         assertEquals("Warehouse A", result.storageLocation());
         assertEquals("Scientific Equipment", result.cargoName());
         assertEquals("John Doe", result.lastCheckedByUserName());
-        verify(storageUnitRepository, times(1)).findById(1L);
-        verify(cargoRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).findById(1L);
+        verify(storageUnitService, times(1)).getEntityById(1L);
+        verify(cargoService, times(1)).getEntityById(1L);
+        verify(userService, times(1)).getEntityByIdOrNull(1L);
     }
 
     @Test
@@ -485,7 +506,7 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(testCargoStorage));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(savedCargoStorage);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.empty());
+        when(storageUnitService.getEntityById(1L)).thenThrow(new DataNotFoundException("Storage unit not found"));
 
 
         DataNotFoundException exception = assertThrows(
@@ -494,7 +515,7 @@ class CargoStorageServiceTests {
         );
 
         assertEquals("Storage unit not found", exception.getMessage());
-        verify(storageUnitRepository, times(1)).findById(1L);
+        verify(storageUnitService, times(1)).getEntityById(1L);
     }
 
     @Test
@@ -509,8 +530,8 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(testCargoStorage));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(savedCargoStorage);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.empty());
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenThrow(new DataNotFoundException("Cargo not found"));
 
 
         DataNotFoundException exception = assertThrows(
@@ -519,7 +540,7 @@ class CargoStorageServiceTests {
         );
 
         assertEquals("Cargo not found", exception.getMessage());
-        verify(cargoRepository, times(1)).findById(1L);
+        verify(cargoService, times(1)).getEntityById(1L);
     }
 
     @Test
@@ -535,8 +556,8 @@ class CargoStorageServiceTests {
 
         when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(testCargoStorage));
         when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(savedCargoStorage);
-        when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
+        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
 
         when(cargoStorageMapper.toResponseDTO(eq(savedCargoStorage), eq("SU-001"),
                 eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
@@ -548,7 +569,7 @@ class CargoStorageServiceTests {
 
         assertNotNull(result);
 
-        verify(userRepository, never()).findById(any());
+        verify(userService, never()).getEntityById(any());
     }
     @Test
     void getAllCargoStorage_WithPagination_ShouldReturnCorrectPage() {
@@ -559,9 +580,9 @@ class CargoStorageServiceTests {
 
 
 
-        lenient().when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        lenient().when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        lenient().when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        lenient().when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        lenient().when(userService.getEntityById(1L)).thenReturn(testUser);
         lenient().when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                         eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);
@@ -584,9 +605,9 @@ class CargoStorageServiceTests {
         when(cargoStorageRepository.findByStorageUnitIdOrderByStoredAt(1L)).thenReturn(cargoStorages);
 
 
-        lenient().when(storageUnitRepository.findById(1L)).thenReturn(Optional.of(testStorageUnit));
-        lenient().when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        lenient().when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+        lenient().when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+        lenient().when(userService.getEntityById(1L)).thenReturn(testUser);
         lenient().when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
                         eq("Warehouse A"), eq("Scientific Equipment"), eq("John Doe")))
                 .thenReturn(testResponseDTO);

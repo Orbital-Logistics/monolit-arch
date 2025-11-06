@@ -39,7 +39,7 @@ class SpacecraftServiceTests {
     private SpacecraftRepository spacecraftRepository;
 
     @Mock
-    private SpacecraftTypeRepository spacecraftTypeRepository;
+    private SpacecraftTypeService spacecraftTypeService;
 
     @Mock
     private SpacecraftMapper spacecraftMapper;
@@ -89,6 +89,8 @@ class SpacecraftServiceTests {
         lenient().when(jdbcTemplate.queryForObject(anyString(), eq(BigDecimal.class), any(Object[].class)))
                 .thenReturn(BigDecimal.ZERO);
         lenient().when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        spacecraftService.setSpacecraftTypeService(spacecraftTypeService);
     }
 
     @Test
@@ -98,7 +100,7 @@ class SpacecraftServiceTests {
                 .thenReturn(spacecrafts);
         when(spacecraftRepository.countWithFilters("Enterprise", "DOCKED"))
                 .thenReturn(1L);
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -124,7 +126,7 @@ class SpacecraftServiceTests {
                 .thenReturn(spacecrafts);
         when(spacecraftRepository.countWithFilters(null, null))
                 .thenReturn(1L);
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -141,7 +143,7 @@ class SpacecraftServiceTests {
         List<Spacecraft> spacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findWithFilters(null, null, 21, 0))
                 .thenReturn(spacecrafts);
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -157,7 +159,7 @@ class SpacecraftServiceTests {
     @Test
     void getSpacecraftById_WithValidId_ShouldReturnSpacecraft() {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -200,7 +202,7 @@ class SpacecraftServiceTests {
     @Test
     void createSpacecraft_WithInvalidTypeId_ShouldThrowException() {
         when(spacecraftRepository.existsByRegistryCode("NCC-1701")).thenReturn(false);
-        when(spacecraftTypeRepository.findById(999L)).thenReturn(Optional.empty());
+        when(spacecraftTypeService.getEntityById(999L)).thenThrow(new DataNotFoundException("Spacecraft type not found"));
 
         SpacecraftRequestDTO requestWithInvalidType = new SpacecraftRequestDTO(
                 "NCC-1701", "Enterprise", 999L, BigDecimal.valueOf(1000.0),
@@ -213,7 +215,7 @@ class SpacecraftServiceTests {
         );
 
         assertEquals("Spacecraft type not found", exception.getMessage());
-        verify(spacecraftTypeRepository, times(1)).findById(999L);
+        verify(spacecraftTypeService, times(1)).getEntityById(999L);
         verify(spacecraftRepository, never()).save(any());
     }
 
@@ -227,7 +229,7 @@ class SpacecraftServiceTests {
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
         when(spacecraftRepository.existsByRegistryCode("NCC-1701-A")).thenReturn(false);
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -283,7 +285,7 @@ class SpacecraftServiceTests {
         );
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -304,7 +306,7 @@ class SpacecraftServiceTests {
         );
 
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -342,7 +344,7 @@ class SpacecraftServiceTests {
     void getAvailableSpacecrafts_ShouldReturnAvailableSpacecrafts() {
         List<Spacecraft> availableSpacecrafts = List.of(testSpacecraft);
         when(spacecraftRepository.findAvailableForMission()).thenReturn(availableSpacecrafts);
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -358,7 +360,7 @@ class SpacecraftServiceTests {
     @Test
     void updateSpacecraftStatus_WithValidId_ShouldUpdateStatus() {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -388,7 +390,7 @@ class SpacecraftServiceTests {
     @Test
     void toResponseDTO_WithValidSpacecraft_ShouldReturnResponseDTO() {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.of(testSpacecraftType));
+        when(spacecraftTypeService.getEntityById(1L)).thenReturn(testSpacecraftType);
         when(spacecraftMapper.toResponseDTO(any(Spacecraft.class), eq("Cargo Ship"),
                 eq(SpacecraftClassification.CARGO_HAULER), eq(BigDecimal.ZERO), eq(BigDecimal.ZERO)))
                 .thenReturn(testResponseDTO);
@@ -398,13 +400,13 @@ class SpacecraftServiceTests {
         assertNotNull(result);
         assertEquals("Cargo Ship", result.spacecraftTypeName());
         assertEquals(SpacecraftClassification.CARGO_HAULER, result.classification());
-        verify(spacecraftTypeRepository, times(1)).findById(1L);
+        verify(spacecraftTypeService, times(1)).getEntityById(1L);
     }
 
     @Test
     void toResponseDTO_WithInvalidType_ShouldThrowException() {
         when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
-        when(spacecraftTypeRepository.findById(1L)).thenReturn(Optional.empty());
+        when(spacecraftTypeService.getEntityById(1L)).thenThrow(new DataNotFoundException("Spacecraft type not found"));
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -412,6 +414,6 @@ class SpacecraftServiceTests {
         );
 
         assertEquals("Spacecraft type not found", exception.getMessage());
-        verify(spacecraftTypeRepository, times(1)).findById(1L);
+        verify(spacecraftTypeService, times(1)).getEntityById(1L);
     }
 }

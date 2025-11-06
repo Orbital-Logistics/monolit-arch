@@ -45,6 +45,11 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+task unitTest(type: Test) {
+    useJUnitPlatform()
+    exclude '**/IntegrationTests.class'
+}
+
 test {
     finalizedBy jacocoTestReport // report is always generated after tests run
 }

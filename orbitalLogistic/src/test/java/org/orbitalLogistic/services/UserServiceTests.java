@@ -18,7 +18,6 @@ import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.UserMapper;
 import org.orbitalLogistic.repositories.UserRepository;
 import org.orbitalLogistic.repositories.UserRoleRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -100,7 +99,6 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(false);
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(newUser);
-        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.of(testRole));
         when(userRepository.save(newUser)).thenReturn(savedUser);
         when(userMapper.toResponseDTO(savedUser)).thenReturn(expectedResponse);
@@ -149,7 +147,6 @@ class UserServiceTests {
         assertEquals("User with email already exists", exception.getMessage());
         verify(userRepository, times(1)).existsByEmail("jane.doe@example.com");
         verify(userRepository, never()).save(any());
-        verify(passwordEncoder, never()).encode(any());
     }
 
     @Test
@@ -225,7 +222,7 @@ class UserServiceTests {
                 () -> userService.findUserById(999L)
         );
 
-        assertEquals("User not found", exception.getMessage());
+        assertEquals("User not found with id: 999", exception.getMessage());
         verify(userRepository, times(1)).findById(999L);
     }
 
@@ -411,7 +408,6 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("jane.doe@example.com")).thenReturn(false);
         when(userMapper.toEntity(testRegistrationRequest)).thenReturn(testUser);
-        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.empty());
 
 
@@ -450,7 +446,6 @@ class UserServiceTests {
 
         when(userRepository.existsByEmail("new.user@example.com")).thenReturn(false);
         when(userMapper.toEntity(any())).thenReturn(newUser);
-        when("password123").thenReturn("encodedPassword");
         when(roleRepository.findByName("logistics_officer")).thenReturn(Optional.of(testRole));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(userMapper.toResponseDTO(savedUser)).thenReturn(expectedResponse);

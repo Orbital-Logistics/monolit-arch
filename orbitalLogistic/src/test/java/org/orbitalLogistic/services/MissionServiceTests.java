@@ -42,10 +42,10 @@ class MissionServiceTests {
     private MissionRepository missionRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Mock
-    private SpacecraftRepository spacecraftRepository;
+    private SpacecraftService spacecraftService;
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -120,14 +120,17 @@ class MissionServiceTests {
         );
 
         setupCommonMocks();
+
+        missionService.setUserService(userService);
+        missionService.setSpacecraftService(spacecraftService);
     }
 
     private void setupCommonMocks() {
         lenient().when(missionMapper.toResponseDTO(any(Mission.class), anyString(), anyString()))
                 .thenReturn(testResponseDTO);
 
-        lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
-        lenient().when(spacecraftRepository.findById(1L)).thenReturn(Optional.of(testSpacecraft));
+        lenient().when(userService.getEntityById(1L)).thenReturn(testCommandingOfficer);
+        lenient().when(spacecraftService.getEntityById(1L)).thenReturn(testSpacecraft);
         lenient().when(missionRepository.save(any(Mission.class))).thenReturn(testMission);
     }
 
@@ -219,6 +222,8 @@ class MissionServiceTests {
     @Test
     void getMissionById_WithValidId_ShouldReturnMission() {
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(userService.getEntityById(1L)).thenReturn(testCommandingOfficer);
+        when(spacecraftService.getEntityById(1L)).thenReturn(testSpacecraft);
 
         MissionResponseDTO result = missionService.getMissionById(1L);
 
@@ -272,7 +277,7 @@ class MissionServiceTests {
     @Test
     void createMission_WithInvalidCommandingOfficer_ShouldThrowException() {
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(false);
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userService.getEntityById(999L)).thenThrow(new DataNotFoundException("Commanding officer not found"));
 
         MissionRequestDTO requestWithInvalidOfficer = createDefaultMissionRequestDTO(
                 "MISSION-001",
@@ -290,15 +295,15 @@ class MissionServiceTests {
         );
 
         assertEquals("Commanding officer not found", exception.getMessage());
-        verify(userRepository, times(1)).findById(999L);
+        verify(userService, times(1)).getEntityById(999L);
         verify(missionRepository, never()).save(any());
     }
 
     @Test
     void createMission_WithInvalidSpacecraft_ShouldThrowException() {
         when(missionRepository.existsByMissionCode("MISSION-001")).thenReturn(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
-        when(spacecraftRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userService.getEntityById(1L)).thenReturn(testCommandingOfficer);
+        when(spacecraftService.getEntityById(999L)).thenThrow(new DataNotFoundException("Spacecraft not found"));
 
         MissionRequestDTO requestWithInvalidSpacecraft = createDefaultMissionRequestDTO(
                 "MISSION-001",
@@ -316,7 +321,7 @@ class MissionServiceTests {
         );
 
         assertEquals("Spacecraft not found", exception.getMessage());
-        verify(spacecraftRepository, times(1)).findById(999L);
+        verify(spacecraftService, times(1)).getEntityById(999L);
         verify(missionRepository, never()).save(any());
     }
 
@@ -352,6 +357,8 @@ class MissionServiceTests {
         );
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(userService.getEntityById(1L)).thenReturn(testCommandingOfficer);
+        when(spacecraftService.getEntityById(1L)).thenReturn(testSpacecraft);
         when(missionRepository.existsByMissionCode("MISSION-002")).thenReturn(true);
 
         MissionAlreadyExistsException exception = assertThrows(
@@ -367,7 +374,7 @@ class MissionServiceTests {
     @Test
     void toResponseDTO_WithInvalidCommandingOfficer_ShouldThrowException() {
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userService.getEntityById(1L)).thenThrow(new DataNotFoundException("Commanding officer not found"));
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -375,14 +382,14 @@ class MissionServiceTests {
         );
 
         assertEquals("Commanding officer not found", exception.getMessage());
-        verify(userRepository, times(1)).findById(1L);
+        verify(userService, times(1)).getEntityById(1L);
     }
 
     @Test
     void toResponseDTO_WithInvalidSpacecraft_ShouldThrowException() {
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testCommandingOfficer));
-        when(spacecraftRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userService.getEntityById(1L)).thenReturn(testCommandingOfficer);
+        when(spacecraftService.getEntityById(1L)).thenThrow(new DataNotFoundException("Spacecraft not found"));
 
         DataNotFoundException exception = assertThrows(
                 DataNotFoundException.class,
@@ -390,7 +397,7 @@ class MissionServiceTests {
         );
 
         assertEquals("Spacecraft not found", exception.getMessage());
-        verify(spacecraftRepository, times(1)).findById(1L);
+        verify(spacecraftService, times(1)).getEntityById(1L);
     }
 
     @Test
@@ -429,6 +436,8 @@ class MissionServiceTests {
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
         when(missionRepository.existsByMissionCode("MISSION-001-UPDATED")).thenReturn(false);
+        when(userService.findUserById(1L)).thenReturn(new org.orbitalLogistic.dto.response.UserResponseDTO(1L, "john.doe@example.com", "John Doe"));
+        when(spacecraftService.getSpacecraftById(1L)).thenReturn(new org.orbitalLogistic.dto.response.SpacecraftResponseDTO(1L, "REG", "Name", null, null, null, null, null, null, null, null));
         when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         MissionResponseDTO result = missionService.updateMission(1L, updateRequest);
@@ -457,6 +466,8 @@ class MissionServiceTests {
         );
 
         when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(userService.findUserById(1L)).thenReturn(new org.orbitalLogistic.dto.response.UserResponseDTO(1L, "john.doe@example.com", "John Doe"));
+        when(spacecraftService.getSpacecraftById(1L)).thenReturn(new org.orbitalLogistic.dto.response.SpacecraftResponseDTO(1L, "REG", "Name", null, null, null, null, null, null, null, null));
         when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         MissionResponseDTO result = missionService.updateMission(1L, updateRequest);
@@ -464,5 +475,69 @@ class MissionServiceTests {
         assertNotNull(result);
         verify(missionRepository, never()).existsByMissionCode(anyString());
         verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void startMission_ShouldUpdateStatus() {
+        when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        MissionResponseDTO result = missionService.startMission(1L);
+
+        assertNotNull(result);
+        verify(missionRepository, times(1)).findById(1L);
+        verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void scheduleMission_ShouldUpdateStatus() {
+        when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        MissionResponseDTO result = missionService.scheduleMission(1L);
+
+        assertNotNull(result);
+        verify(missionRepository, times(1)).findById(1L);
+        verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void cancelMission_ShouldUpdateStatus() {
+        when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        MissionResponseDTO result = missionService.cancelMission(1L);
+
+        assertNotNull(result);
+        verify(missionRepository, times(1)).findById(1L);
+        verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void changeMissionPriority_ShouldUpdatePriority() {
+        when(missionRepository.findById(1L)).thenReturn(Optional.of(testMission));
+        when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
+
+        MissionResponseDTO result = missionService.changeMissionPriority(1L, "HIGH");
+
+        assertNotNull(result);
+        verify(missionRepository, times(1)).findById(1L);
+        verify(jdbcTemplate, times(1)).update(anyString(), any(Object[].class));
+    }
+
+    @Test
+    void canCreateMission_ShouldReturnTrueWhenNoOverlap() {
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(0);
+
+        boolean ok = missionService.canCreateMission(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
+        assertTrue(ok);
+    }
+
+    @Test
+    void canCreateMission_ShouldReturnFalseWhenOverlap() {
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(1);
+
+        boolean ok = missionService.canCreateMission(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
+        assertFalse(ok);
     }
 }
