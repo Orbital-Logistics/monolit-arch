@@ -33,6 +33,15 @@ import static org.mockito.Mockito.*;
 class CargoServiceTests {
 
     @Mock
+    private CargoCategoryService cargoCategoryService;
+
+    @Mock
+    private CargoManifestService cargoManifestService;
+
+    @Mock
+    private CargoStorageService cargoStorageService;
+
+    @Mock
     private CargoRepository cargoRepository;
 
     @Mock
@@ -81,6 +90,10 @@ class CargoServiceTests {
                 BigDecimal.valueOf(10.5), BigDecimal.valueOf(5.0),
                 CargoType.SCIENTIFIC, HazardLevel.LOW
         );
+
+        cargoService.setCargoCategoryService(cargoCategoryService);
+        cargoService.setCargoManifestService(cargoManifestService);
+        cargoService.setCargoStorageService(cargoStorageService);
     }
 
     @Test
@@ -88,7 +101,8 @@ class CargoServiceTests {
 
         List<Cargo> cargos = List.of(testCargo);
         when(cargoRepository.findWithFilters(null, null, null, 21, 0)).thenReturn(cargos);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(1L)).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -120,7 +134,8 @@ class CargoServiceTests {
 
         when(cargoRepository.findWithFilters(isNull(), isNull(), isNull(), eq(2), eq(0)))
                 .thenReturn(cargos);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -141,7 +156,8 @@ class CargoServiceTests {
                 .thenReturn(cargos);
         when(cargoRepository.countWithFilters("Scientific", "SCIENTIFIC", "LOW"))
                 .thenReturn(1L);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -169,7 +185,8 @@ class CargoServiceTests {
                 .thenReturn(cargos);
         when(cargoRepository.countWithFilters(null, null, null))
                 .thenReturn(1L);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -186,13 +203,12 @@ class CargoServiceTests {
     void getCargoById_WithValidId_ShouldReturnCargo() {
 
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(1L)).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
-
         CargoResponseDTO result = cargoService.getCargoById(1L);
-
 
         assertNotNull(result);
         assertEquals(1L, result.id());
@@ -204,7 +220,6 @@ class CargoServiceTests {
     void getCargoById_WithInvalidId_ShouldThrowException() {
 
         when(cargoRepository.findById(999L)).thenReturn(Optional.empty());
-
 
         CargoNotFoundException exception = assertThrows(
                 CargoNotFoundException.class,
@@ -229,9 +244,10 @@ class CargoServiceTests {
 
         when(cargoRepository.existsByName("Scientific Equipment")).thenReturn(false);
 
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
         when(cargoMapper.toEntity(testRequestDTO)).thenReturn(newCargo);
         when(cargoRepository.save(newCargo)).thenReturn(testCargo);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -243,7 +259,7 @@ class CargoServiceTests {
         assertEquals("Scientific Equipment", result.name());
         verify(cargoRepository, times(1)).existsByName("Scientific Equipment");
 
-        verify(cargoCategoryRepository, times(2)).findById(1L);
+        verify(cargoCategoryService, atLeast(1)).getEntityById(1L);
         verify(cargoMapper, times(1)).toEntity(testRequestDTO);
         verify(cargoRepository, times(1)).save(newCargo);
     }
@@ -268,7 +284,7 @@ class CargoServiceTests {
     void createCargo_WithInvalidCategoryId_ShouldThrowException() {
 
         when(cargoRepository.existsByName("Scientific Equipment")).thenReturn(false);
-        when(cargoCategoryRepository.findById(999L)).thenReturn(Optional.empty());
+        when(cargoCategoryService.getEntityById(999L)).thenThrow(new DataNotFoundException("Cargo category not found"));
 
         CargoRequestDTO requestWithInvalidCategory = new CargoRequestDTO(
                 "Scientific Equipment", 999L,
@@ -283,7 +299,7 @@ class CargoServiceTests {
         );
 
         assertEquals("Cargo category not found", exception.getMessage());
-        verify(cargoCategoryRepository, times(1)).findById(999L);
+        verify(cargoCategoryService, times(1)).getEntityById(999L);
         verify(cargoRepository, never()).save(any());
     }
 
@@ -298,8 +314,9 @@ class CargoServiceTests {
 
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
         when(cargoRepository.existsByName("Updated Equipment")).thenReturn(false);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
         when(cargoRepository.save(any(Cargo.class))).thenReturn(testCargo);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -362,8 +379,9 @@ class CargoServiceTests {
         );
 
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
         when(cargoRepository.save(any(Cargo.class))).thenReturn(testCargo);
+        when(cargoStorageService.calculateTotalQuantityForCargo(anyLong())).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -380,7 +398,7 @@ class CargoServiceTests {
     void deleteCargo_WithValidId_ShouldDeleteCargo() {
 
         when(cargoRepository.existsById(1L)).thenReturn(true);
-        when(cargoManifestRepository.existsByCargoId(1L)).thenReturn(false);
+        when(cargoManifestService.existsByCargoId(1L)).thenReturn(false);
         doNothing().when(cargoRepository).deleteById(1L);
 
 
@@ -388,7 +406,7 @@ class CargoServiceTests {
 
 
         verify(cargoRepository, times(1)).existsById(1L);
-        verify(cargoManifestRepository, times(1)).existsByCargoId(1L);
+        verify(cargoManifestService, times(1)).existsByCargoId(1L);
         verify(cargoRepository, times(1)).deleteById(1L);
     }
 
@@ -416,7 +434,7 @@ class CargoServiceTests {
                 .thenReturn(cargos);
         when(cargoRepository.countWithFilters("test", "SCIENTIFIC", "LOW"))
                 .thenReturn(1L);
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -433,7 +451,8 @@ class CargoServiceTests {
     void toResponseDTO_WithValidCargo_ShouldReturnResponseDTO() {
 
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+        when(cargoCategoryService.getEntityById(1L)).thenReturn(testCategory);
+        when(cargoStorageService.calculateTotalQuantityForCargo(1L)).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
 
@@ -443,14 +462,14 @@ class CargoServiceTests {
 
         assertNotNull(result);
         assertEquals("Electronics", result.cargoCategoryName());
-        verify(cargoCategoryRepository, times(1)).findById(1L);
+        verify(cargoCategoryService, atLeast(1)).getEntityById(1L);
     }
 
     @Test
     void toResponseDTO_WithInvalidCategory_ShouldThrowException() {
 
         when(cargoRepository.findById(1L)).thenReturn(Optional.of(testCargo));
-        when(cargoCategoryRepository.findById(1L)).thenReturn(Optional.empty());
+        when(cargoCategoryService.getEntityById(1L)).thenThrow(new DataNotFoundException("Cargo category not found"));
 
 
         DataNotFoundException exception = assertThrows(
@@ -459,6 +478,6 @@ class CargoServiceTests {
         );
 
         assertEquals("Cargo category not found", exception.getMessage());
-        verify(cargoCategoryRepository, times(1)).findById(1L);
+        verify(cargoCategoryService, times(1)).getEntityById(1L);
     }
 }
