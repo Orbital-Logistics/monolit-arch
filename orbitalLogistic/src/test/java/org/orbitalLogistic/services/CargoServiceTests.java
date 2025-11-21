@@ -105,10 +105,8 @@ class CargoServiceTests {
         when(cargoStorageService.calculateTotalQuantityForCargo(1L)).thenReturn(0);
         when(cargoMapper.toResponseDTO(any(Cargo.class), eq("Electronics"), eq(0)))
                 .thenReturn(testResponseDTO);
-
-
+        
         List<CargoResponseDTO> result = cargoService.getCargosScroll(0, 20);
-
 
         assertNotNull(result);
         assertEquals(1, result.size());

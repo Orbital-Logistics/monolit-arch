@@ -8,6 +8,7 @@ import org.orbitalLogistic.entities.Mission;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.exceptions.SpacecraftAssignedMissionException;
 import org.orbitalLogistic.exceptions.common.DataNotFoundException;
+import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.SpacecraftMissionMapper;
 import org.orbitalLogistic.repositories.SpacecraftMissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,12 @@ public class SpacecraftMissionService {
     }
 
     public SpacecraftMissionResponseDTO addBackupSpacecraft(Long missionId, SpacecraftMissionRequestDTO request) {
+        try {
+            Long user_id = userService.findUserById(request.assignedByUserId()).id();
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("assignedByUserId not found with id: " + request.assignedByUserId());
+        }
+
         validateEntities(missionId, request);
 
         if (spacecraftMissionRepository.existsBySpacecraftIdAndMissionId(request.spacecraftId(), missionId)) {

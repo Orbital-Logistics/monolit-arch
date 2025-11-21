@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class IntegrationTests {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
             .withDatabaseName("test_db");
 
     @DynamicPropertySource

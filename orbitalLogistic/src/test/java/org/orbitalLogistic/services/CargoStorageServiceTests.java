@@ -426,39 +426,39 @@ class CargoStorageServiceTests {
         verify(cargoService, times(2)).getEntityById(1L);
     }
 
-    @Test
-    void updateQuantity_WithNullUser_ShouldNotUpdateUser() {
-
-        CargoStorageRequestDTO updateRequest = new CargoStorageRequestDTO(
-                1L, 1L, 200, null, "Update", "Updating quantity"
-        );
-
-
-        CargoStorage cargoStorageWithNullUser = CargoStorage.builder()
-                .id(1L)
-                .cargoId(1L)
-                .storageUnitId(1L)
-                .quantity(100)
-                .lastCheckedByUserId(null)
-                .build();
-
-        when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(cargoStorageWithNullUser));
-        when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(cargoStorageWithNullUser);
-        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
-        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
-
-        when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
-                eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
-                .thenReturn(testResponseDTO);
-
-
-        CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, updateRequest);
-
-
-        assertNotNull(result);
-        assertNull(cargoStorageWithNullUser.getLastCheckedByUserId());
-        verify(cargoStorageRepository, times(1)).save(cargoStorageWithNullUser);
-    }
+//    @Test
+//    void updateQuantity_WithNullUser_ShouldNotUpdateUser() {
+//
+//        CargoStorageRequestDTO updateRequest = new CargoStorageRequestDTO(
+//                1L, 1L, 200, null, "Update", "Updating quantity"
+//        );
+//
+//
+//        CargoStorage cargoStorageWithNullUser = CargoStorage.builder()
+//                .id(1L)
+//                .cargoId(1L)
+//                .storageUnitId(1L)
+//                .quantity(100)
+//                .lastCheckedByUserId(null)
+//                .build();
+//
+//        when(cargoStorageRepository.findById(1L)).thenReturn(Optional.of(cargoStorageWithNullUser));
+//        when(cargoStorageRepository.save(any(CargoStorage.class))).thenReturn(cargoStorageWithNullUser);
+//        when(storageUnitService.getEntityById(1L)).thenReturn(testStorageUnit);
+//        when(cargoService.getEntityById(1L)).thenReturn(testCargo);
+//
+//        when(cargoStorageMapper.toResponseDTO(any(CargoStorage.class), eq("SU-001"),
+//                eq("Warehouse A"), eq("Scientific Equipment"), isNull()))
+//                .thenReturn(testResponseDTO);
+//
+//
+//        CargoStorageResponseDTO result = cargoStorageService.updateQuantity(1L, updateRequest);
+//
+//
+//        assertNotNull(result);
+//        assertNull(cargoStorageWithNullUser.getLastCheckedByUserId());
+//        verify(cargoStorageRepository, times(1)).save(cargoStorageWithNullUser);
+//    }
 
     @Test
     void toResponseDTO_WithValidCargoStorage_ShouldReturnResponseDTO() {

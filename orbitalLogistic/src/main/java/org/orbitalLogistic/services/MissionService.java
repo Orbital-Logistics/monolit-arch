@@ -81,7 +81,11 @@ public class MissionService {
             throw new MissionAlreadyExistsException("Mission with code already exists: " + request.missionCode());
         }
 
-        userService.getEntityById(request.commandingOfficerId());
+        try{
+            userService.getEntityById(request.commandingOfficerId());
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("Command officer not found with id: " + request.commandingOfficerId());
+        }
         spacecraftService.getEntityById(request.spacecraftId());
 
         String sql = "INSERT INTO mission " +
@@ -144,7 +148,13 @@ public class MissionService {
                      "scheduled_departure = ?, " +
                      "scheduled_arrival = ? " +
                      "WHERE id = ?";
-        
+
+        try {
+            Long user_id = userService.findUserById(request.commandingOfficerId()).id();
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("Command officer not found with id: " + request.commandingOfficerId());
+        }
+
         jdbcTemplate.update(sql,
                 request.missionCode(),
                 request.missionName(),

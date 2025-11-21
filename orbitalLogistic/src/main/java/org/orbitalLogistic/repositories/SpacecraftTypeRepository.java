@@ -20,7 +20,7 @@ public interface SpacecraftTypeRepository extends CrudRepository<SpacecraftType,
 
     @Query("""
         SELECT st.* FROM spacecraft_type st 
-        WHERE (:typeName IS NULL OR LOWER(st.type_name) LIKE LOWER(CONCAT('%', :typeName, '%'))) 
+        WHERE (CAST(:typeName AS TEXT) IS NULL OR LOWER(st.type_name) LIKE LOWER(CONCAT('%', CAST(:typeName AS TEXT), '%'))) 
         AND (:classification IS NULL OR st.classification = :classification)
         ORDER BY st.type_name
         LIMIT :limit OFFSET :offset
@@ -34,7 +34,7 @@ public interface SpacecraftTypeRepository extends CrudRepository<SpacecraftType,
 
     @Query("""
         SELECT COUNT(*) FROM spacecraft_type st 
-        WHERE (:typeName IS NULL OR LOWER(st.type_name) LIKE LOWER(CONCAT('%', :typeName, '%'))) 
+        WHERE (CAST(:typeName AS TEXT) IS NULL OR LOWER(st.type_name) LIKE LOWER(CONCAT('%', CAST(:typeName AS TEXT), '%'))) 
         AND (:classification IS NULL OR st.classification = :classification)
     """)
     long countWithFilters(

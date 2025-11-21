@@ -8,6 +8,7 @@ import org.orbitalLogistic.entities.Cargo;
 import org.orbitalLogistic.entities.StorageUnit;
 import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.exceptions.CargoStorageNotFoundException;
+import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.CargoStorageMapper;
 import org.orbitalLogistic.repositories.CargoStorageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +102,12 @@ public class CargoStorageService {
     }
 
     public CargoStorageResponseDTO updateQuantity(Long id, CargoStorageRequestDTO request) {
+        try {
+            Long user_id = userService.findUserById(request.updatedByUserId()).id();
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("updatedByUser not found with id: " + request.updatedByUserId());
+        }
+
         CargoStorage cargoStorage = cargoStorageRepository.findById(id)
                 .orElseThrow(() -> new CargoStorageNotFoundException("Cargo storage not found with id: " + id));
 
