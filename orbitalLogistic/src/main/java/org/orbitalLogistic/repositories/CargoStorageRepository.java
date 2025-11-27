@@ -31,9 +31,9 @@ public interface CargoStorageRepository extends CrudRepository<CargoStorage, Lon
         SELECT cs.* FROM cargo_storage cs
         INNER JOIN cargo c ON cs.cargo_id = c.id
         INNER JOIN storage_unit su ON cs.storage_unit_id = su.id
-        WHERE (:storageUnitId IS NULL OR cs.storage_unit_id = :storageUnitId)
-        AND (:cargoId IS NULL OR cs.cargo_id = :cargoId)
-        AND (:location IS NULL OR LOWER(su.location) LIKE LOWER(CONCAT('%', :location, '%')))
+        WHERE (CAST(:storageUnitId AS BIGINT) IS NULL OR cs.storage_unit_id = CAST(:storageUnitId AS BIGINT))
+        AND (CAST(:cargoId AS BIGINT) IS NULL OR cs.cargo_id = CAST(:cargoId AS BIGINT))
+        AND (CAST(:location AS TEXT) IS NULL OR LOWER(su.location) LIKE LOWER(CONCAT('%', CAST(:location AS TEXT), '%')))
         ORDER BY su.location, c.name
         LIMIT :limit OFFSET :offset
     """)
@@ -49,9 +49,9 @@ public interface CargoStorageRepository extends CrudRepository<CargoStorage, Lon
         SELECT COUNT(*) FROM cargo_storage cs
         INNER JOIN cargo c ON cs.cargo_id = c.id
         INNER JOIN storage_unit su ON cs.storage_unit_id = su.id
-        WHERE (:storageUnitId IS NULL OR cs.storage_unit_id = :storageUnitId)
-        AND (:cargoId IS NULL OR cs.cargo_id = :cargoId)
-        AND (:location IS NULL OR LOWER(su.location) LIKE LOWER(CONCAT('%', :location, '%')))
+        WHERE (CAST(:storageUnitId AS BIGINT) IS NULL OR cs.storage_unit_id = CAST(:storageUnitId AS BIGINT))
+        AND (CAST(:cargoId AS BIGINT) IS NULL OR cs.cargo_id = CAST(:cargoId AS BIGINT))
+        AND (CAST(:location AS TEXT) IS NULL OR LOWER(su.location) LIKE LOWER(CONCAT('%', CAST(:location AS TEXT), '%')))
     """)
     long countWithFilters(
         @Param("storageUnitId") Long storageUnitId,

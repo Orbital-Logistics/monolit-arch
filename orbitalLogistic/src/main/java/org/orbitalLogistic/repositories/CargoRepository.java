@@ -19,9 +19,9 @@ public interface CargoRepository extends CrudRepository<Cargo, Long> {
 
     @Query("""
         SELECT c.* FROM cargo c 
-        WHERE (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) 
-        AND (:cargoType IS NULL OR c.cargo_type = CAST(:cargoType AS cargo_type_enum))
-        AND (:hazardLevel IS NULL OR c.hazard_level = CAST(:hazardLevel AS hazard_level_enum))
+        WHERE (CAST(:name AS TEXT) IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%'))) 
+        AND (CAST(:cargoType AS TEXT) IS NULL OR c.cargo_type = CAST(:cargoType AS cargo_type_enum))
+        AND (CAST(:hazardLevel AS TEXT) IS NULL OR c.hazard_level = CAST(:hazardLevel AS hazard_level_enum))
         ORDER BY c.id
         LIMIT :limit OFFSET :offset
     """)
@@ -35,9 +35,9 @@ public interface CargoRepository extends CrudRepository<Cargo, Long> {
 
     @Query("""
         SELECT COUNT(*) FROM cargo c 
-        WHERE (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) 
-        AND (:cargoType IS NULL OR c.cargo_type = CAST(:cargoType AS cargo_type_enum))
-        AND (:hazardLevel IS NULL OR c.hazard_level = CAST(:hazardLevel AS hazard_level_enum))
+        WHERE (CAST(:name AS TEXT) IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%'))) 
+        AND (CAST(:cargoType AS TEXT) IS NULL OR c.cargo_type = CAST(:cargoType AS cargo_type_enum))
+        AND (CAST(:hazardLevel AS TEXT) IS NULL OR c.hazard_level = CAST(:hazardLevel AS hazard_level_enum))
     """)
     long countWithFilters(
         @Param("name") String name,

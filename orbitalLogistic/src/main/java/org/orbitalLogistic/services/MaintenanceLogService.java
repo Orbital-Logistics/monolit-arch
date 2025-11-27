@@ -9,6 +9,7 @@ import org.orbitalLogistic.entities.User;
 import org.orbitalLogistic.entities.enums.MaintenanceStatus;
 import org.orbitalLogistic.entities.enums.SpacecraftStatus;
 import org.orbitalLogistic.exceptions.MaintenanceLogNotFoundException;
+import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.MaintenanceLogMapper;
 import org.orbitalLogistic.repositories.MaintenanceLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,19 +135,29 @@ public class MaintenanceLogService {
 
     private MaintenanceLogResponseDTO toResponseDTO(MaintenanceLog maintenanceLog) {
         Spacecraft spacecraft = spacecraftService.getEntityById(maintenanceLog.getSpacecraftId());
-        User performedByUser = userService.getEntityById(maintenanceLog.getPerformedByUserId());
+        try {
+            User performedByUser = userService.getEntityById(maintenanceLog.getPerformedByUserId());
+            String supervisedByUserName = null;
+            if (maintenanceLog.getSupervisedByUserId() != null) {
+                try {
+                    User supervisedByUser = userService.getEntityByIdOrNull(maintenanceLog.getSupervisedByUserId());
+                    if (supervisedByUser != null) {
+                        supervisedByUserName = supervisedByUser.getUsername();
+                        return maintenanceLogMapper.toResponseDTO(maintenanceLog,
+                                spacecraft.getName(),
+                                performedByUser.getUsername(),
+                                supervisedByUserName);
+                    }
+                } catch (UserNotFoundException e) {
+                    throw new UserNotFoundException("supervisedByUser not found with id: " + maintenanceLog.getSupervisedByUserId());
+                }
 
-        String supervisedByUserName = null;
-        if (maintenanceLog.getSupervisedByUserId() != null) {
-            User supervisedByUser = userService.getEntityByIdOrNull(maintenanceLog.getSupervisedByUserId());
-            if (supervisedByUser != null) {
-                supervisedByUserName = supervisedByUser.getUsername();
             }
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("performedByUser not found with id: " + maintenanceLog.getPerformedByUserId());
         }
 
-        return maintenanceLogMapper.toResponseDTO(maintenanceLog,
-                spacecraft.getName(),
-                performedByUser.getUsername(),
-                supervisedByUserName);
+
+        return null;
     }
 }

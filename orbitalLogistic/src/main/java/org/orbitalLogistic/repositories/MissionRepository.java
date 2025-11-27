@@ -28,13 +28,13 @@ public interface MissionRepository extends CrudRepository<Mission, Long> {
 
     @Query("""
         SELECT m.* FROM mission m 
-        WHERE (:missionCode IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', :missionCode, '%')))
-        AND (:missionName IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', :missionName, '%')))
-        AND (:status IS NULL OR m.status = CAST(:status AS mission_status_enum))
-        AND (:missionType IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
-        AND (:priority IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
-        AND (:commandingOfficerId IS NULL OR m.commanding_officer_id = :commandingOfficerId)
-        AND (:spacecraftId IS NULL OR m.spacecraft_id = :spacecraftId)
+        WHERE (CAST(:missionCode AS TEXT) IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', CAST(:missionCode AS TEXT), '%')))
+        AND (CAST(:missionName AS TEXT) IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', CAST(:missionName AS TEXT), '%')))
+        AND (CAST(:status AS TEXT) IS NULL OR m.status = CAST(:status AS mission_status_enum))
+        AND (CAST(:missionType AS TEXT) IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
+        AND (CAST(:priority AS TEXT) IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
+        AND (CAST(:commandingOfficerId AS BIGINT) IS NULL OR m.commanding_officer_id = CAST(:commandingOfficerId AS BIGINT))
+        AND (CAST(:spacecraftId AS BIGINT) IS NULL OR m.spacecraft_id = CAST(:spacecraftId AS BIGINT))
         ORDER BY m.scheduled_departure DESC NULLS LAST, m.mission_code
         LIMIT :limit OFFSET :offset
     """)
@@ -52,13 +52,13 @@ public interface MissionRepository extends CrudRepository<Mission, Long> {
 
     @Query("""
         SELECT COUNT(*) FROM mission m 
-        WHERE (:missionCode IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', :missionCode, '%')))
-        AND (:missionName IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', :missionName, '%')))
-        AND (:status IS NULL OR m.status = CAST(:status AS mission_status_enum))
-        AND (:missionType IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
-        AND (:priority IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
-        AND (:commandingOfficerId IS NULL OR m.commanding_officer_id = :commandingOfficerId)
-        AND (:spacecraftId IS NULL OR m.spacecraft_id = :spacecraftId)
+        WHERE (CAST(:missionCode AS TEXT) IS NULL OR LOWER(m.mission_code) LIKE LOWER(CONCAT('%', CAST(:missionCode AS TEXT), '%')))
+        AND (CAST(:missionName AS TEXT) IS NULL OR LOWER(m.mission_name) LIKE LOWER(CONCAT('%', CAST(:missionName AS TEXT), '%')))
+        AND (CAST(:status AS TEXT) IS NULL OR m.status = CAST(:status AS mission_status_enum))
+        AND (CAST(:missionType AS TEXT) IS NULL OR m.mission_type = CAST(:missionType AS mission_type_enum))
+        AND (CAST(:priority AS TEXT) IS NULL OR m.priority = CAST(:priority AS mission_priority_enum))
+        AND (CAST(:commandingOfficerId AS BIGINT) IS NULL OR m.commanding_officer_id = CAST(:commandingOfficerId AS BIGINT))
+        AND (CAST(:spacecraftId AS BIGINT) IS NULL OR m.spacecraft_id = CAST(:spacecraftId AS BIGINT))
     """)
     long countWithFilters(
         @Param("missionCode") String missionCode,

@@ -19,8 +19,8 @@ public interface SpacecraftRepository extends CrudRepository<Spacecraft, Long> {
 
     @Query("""
         SELECT s.* FROM spacecraft s 
-        WHERE (:name IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))) 
-        AND (:status IS NULL OR s.status = CAST(:status AS spacecraft_status_enum))
+        WHERE (CAST(:name AS VARCHAR) IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', CAST(:name AS VARCHAR), '%'))) 
+        AND (CAST(:status AS VARCHAR) IS NULL OR s.status = CAST(:status AS spacecraft_status_enum))
         ORDER BY s.id
         LIMIT :limit OFFSET :offset
     """)
@@ -33,8 +33,8 @@ public interface SpacecraftRepository extends CrudRepository<Spacecraft, Long> {
 
     @Query("""
         SELECT COUNT(*) FROM spacecraft s 
-        WHERE (:name IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))) 
-        AND (:status IS NULL OR s.status = CAST(:status AS spacecraft_status_enum))
+        WHERE (CAST(:name AS VARCHAR) IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', CAST(:name AS VARCHAR), '%'))) 
+        AND (CAST(:status AS VARCHAR) IS NULL OR s.status = CAST(:status AS spacecraft_status_enum))
     """)
     long countWithFilters(@Param("name") String name, @Param("status") String status);
 

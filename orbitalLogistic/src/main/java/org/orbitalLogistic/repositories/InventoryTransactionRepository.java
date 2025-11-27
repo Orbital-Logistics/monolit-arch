@@ -31,14 +31,14 @@ public interface InventoryTransactionRepository extends CrudRepository<Inventory
 
     @Query("""
         SELECT it.* FROM inventory_transaction it
-        WHERE (:transactionType IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
-        AND (:cargoId IS NULL OR it.cargo_id = :cargoId)
-        AND (:performedByUserId IS NULL OR it.performed_by_user_id = :performedByUserId)
-        AND (:fromStorageUnitId IS NULL OR it.from_storage_unit_id = :fromStorageUnitId)
-        AND (:toStorageUnitId IS NULL OR it.to_storage_unit_id = :toStorageUnitId)
-        AND (:fromSpacecraftId IS NULL OR it.from_spacecraft_id = :fromSpacecraftId)
-        AND (:toSpacecraftId IS NULL OR it.to_spacecraft_id = :toSpacecraftId)
-        AND (:reasonCode IS NULL OR LOWER(it.reason_code) LIKE LOWER(CONCAT('%', :reasonCode, '%')))
+        WHERE (CAST(:transactionType AS TEXT) IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
+        AND (CAST(:cargoId AS BIGINT) IS NULL OR it.cargo_id = CAST(:cargoId AS BIGINT))
+        AND (CAST(:performedByUserId AS BIGINT) IS NULL OR it.performed_by_user_id = CAST(:performedByUserId AS BIGINT))
+        AND (CAST(:fromStorageUnitId AS BIGINT) IS NULL OR it.from_storage_unit_id = CAST(:fromStorageUnitId AS BIGINT))
+        AND (CAST(:toStorageUnitId AS BIGINT) IS NULL OR it.to_storage_unit_id = CAST(:toStorageUnitId AS BIGINT))
+        AND (CAST(:fromSpacecraftId AS BIGINT) IS NULL OR it.from_spacecraft_id = CAST(:fromSpacecraftId AS BIGINT))
+        AND (CAST(:toSpacecraftId AS BIGINT) IS NULL OR it.to_spacecraft_id = CAST(:toSpacecraftId AS BIGINT))
+        AND (CAST(:reasonCode AS TEXT) IS NULL OR LOWER(it.reason_code) LIKE LOWER(CONCAT('%', CAST(:reasonCode AS TEXT), '%')))
         ORDER BY it.transaction_date DESC
         LIMIT :limit OFFSET :offset
     """)
@@ -57,14 +57,14 @@ public interface InventoryTransactionRepository extends CrudRepository<Inventory
 
     @Query("""
         SELECT COUNT(*) FROM inventory_transaction it
-        WHERE (:transactionType IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
-        AND (:cargoId IS NULL OR it.cargo_id = :cargoId)
-        AND (:performedByUserId IS NULL OR it.performed_by_user_id = :performedByUserId)
-        AND (:fromStorageUnitId IS NULL OR it.from_storage_unit_id = :fromStorageUnitId)
-        AND (:toStorageUnitId IS NULL OR it.to_storage_unit_id = :toStorageUnitId)
-        AND (:fromSpacecraftId IS NULL OR it.from_spacecraft_id = :fromSpacecraftId)
-        AND (:toSpacecraftId IS NULL OR it.to_spacecraft_id = :toSpacecraftId)
-        AND (:reasonCode IS NULL OR LOWER(it.reason_code) LIKE LOWER(CONCAT('%', :reasonCode, '%')))
+        WHERE (CAST(:transactionType AS TEXT) IS NULL OR it.transaction_type = CAST(:transactionType AS transaction_type_enum))
+        AND (CAST(:cargoId AS BIGINT) IS NULL OR it.cargo_id = CAST(:cargoId AS BIGINT))
+        AND (CAST(:performedByUserId AS BIGINT) IS NULL OR it.performed_by_user_id = CAST(:performedByUserId AS BIGINT))
+        AND (CAST(:fromStorageUnitId AS BIGINT) IS NULL OR it.from_storage_unit_id = CAST(:fromStorageUnitId AS BIGINT))
+        AND (CAST(:toStorageUnitId AS BIGINT) IS NULL OR it.to_storage_unit_id = CAST(:toStorageUnitId AS BIGINT))
+        AND (CAST(:fromSpacecraftId AS BIGINT) IS NULL OR it.from_spacecraft_id = CAST(:fromSpacecraftId AS BIGINT))
+        AND (CAST(:toSpacecraftId AS BIGINT) IS NULL OR it.to_spacecraft_id = CAST(:toSpacecraftId AS BIGINT))
+        AND (CAST(:reasonCode AS TEXT) IS NULL OR LOWER(it.reason_code) LIKE LOWER(CONCAT('%', CAST(:reasonCode AS TEXT), '%')))
     """)
     long countWithFilters(
         @Param("transactionType") String transactionType,

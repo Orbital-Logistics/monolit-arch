@@ -10,6 +10,7 @@ import org.orbitalLogistic.entities.StorageUnit;
 import org.orbitalLogistic.entities.Spacecraft;
 import org.orbitalLogistic.entities.enums.TransactionType;
 import org.orbitalLogistic.exceptions.InventoryTransactionNotFoundException;
+import org.orbitalLogistic.exceptions.user.UserNotFoundException;
 import org.orbitalLogistic.mappers.InventoryTransactionMapper;
 import org.orbitalLogistic.repositories.InventoryTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +97,12 @@ public class InventoryTransactionService {
     @Transactional
     public InventoryTransactionResponseDTO transferBetweenStorages(InventoryTransactionRequestDTO request) {
         validateTransactionEntities(request);
+
+        try {
+            Long user_id = userService.findUserById(request.performedByUserId()).id();
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("performedByUserId not found with id: " + request.performedByUserId());
+        }
 
         if (request.fromStorageUnitId() == null || request.toStorageUnitId() == null) {
             throw new IllegalArgumentException("Both source and destination storage units are required for transfer");

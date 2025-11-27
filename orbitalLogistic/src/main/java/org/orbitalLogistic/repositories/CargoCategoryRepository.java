@@ -20,7 +20,7 @@ public interface CargoCategoryRepository extends CrudRepository<CargoCategory, L
 
     @Query("""
         SELECT cc.* FROM cargo_category cc 
-        WHERE (:name IS NULL OR LOWER(cc.name) LIKE LOWER(CONCAT('%', :name, '%')))
+        WHERE (CAST(:name AS TEXT) IS NULL OR LOWER(cc.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%')))
         ORDER BY cc.name
         LIMIT :limit OFFSET :offset
     """)
@@ -32,7 +32,7 @@ public interface CargoCategoryRepository extends CrudRepository<CargoCategory, L
 
     @Query("""
         SELECT COUNT(*) FROM cargo_category cc 
-        WHERE (:name IS NULL OR LOWER(cc.name) LIKE LOWER(CONCAT('%', :name, '%')))
+        WHERE (CAST(:name AS TEXT) IS NULL OR LOWER(cc.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%')))
     """)
     long countWithFilters(@Param("name") String name);
 
