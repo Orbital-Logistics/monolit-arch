@@ -1,0 +1,83 @@
+services:
+  db:
+    image: postgres:17
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_pass
+      POSTGRES_DB: orbitallogistic
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build: ./eureka
+    container_name: eureka-server
+    ports:
+      - 8761:8761
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      - CONFIG_SERVER_URI=${CONFIG_SERVER_URI:-http://config-server:8888}
+    ports: []
+    depends_on:
+      db:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - 8080:8080
+    depends_on:
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    environment:
+      - CONFIG_USERNAME=${CONFIG_USERNAME}
+      - CONFIG_TOKEN=${CONFIG_TOKEN}
+    ports:
+      - 8888:8888
+    depends_on:
+      - eureka-server
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+volumes:
+  db_data:
